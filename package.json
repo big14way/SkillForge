@@ -1,0 +1,35 @@
+{
+  "name": "skillforge",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Verifiable Agent Skill Marketplace on 0G",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r --parallel build",
+    "test": "pnpm -r test",
+    "test:integration": "SKILLFORGE_INTEGRATION=1 pnpm -r --workspace-concurrency=1 test:integration",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r exec rm -rf dist .tsbuildinfo node_modules",
+    "contracts:build": "cd contracts && forge build",
+    "contracts:test": "cd contracts && forge test",
+    "abi:export": "node ./scripts/export-abis.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}
