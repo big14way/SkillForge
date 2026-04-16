@@ -102,21 +102,30 @@ forge script script/Deploy.s.sol
 
 # 6. Real deployment to Galileo testnet
 cp .env.example .env          # fill in PRIVATE_KEY + PROTOCOL_TREASURY
-source .env
-forge script script/Deploy.s.sol --rpc-url galileo --broadcast --private-key "$PRIVATE_KEY"
+set -a && source .env && set +a
+forge script script/Deploy.s.sol \
+  --rpc-url "$GALILEO_RPC_URL" \
+  --broadcast \
+  --private-key "$PRIVATE_KEY" \
+  --priority-gas-price 2000000000 \
+  --with-gas-price 3000000000     # Galileo requires >= 2 gwei tip
 ```
 
 ---
 
 ## Deployed addresses
 
-| Contract | Galileo testnet (chainId 16601) |
+Live on **0G Galileo testnet (chainId 16602)** — deployed 2026-04-16.
+
+| Contract | Address |
 | --- | --- |
-| SkillINFT | `TBD — Week 1 broadcast pending` |
-| SkillRegistry | `TBD — Week 1 broadcast pending` |
-| SkillEscrow | `TBD — Week 1 broadcast pending` |
+| SkillINFT | [`0xC3a201c2Dc904ae32a9a0adea3478EB252d5Cf88`](https://chainscan-galileo.0g.ai/address/0xC3a201c2Dc904ae32a9a0adea3478EB252d5Cf88) |
+| SkillRegistry | [`0xde5eCbdf2e9601C4B4a08899EAa836081011F7ac`](https://chainscan-galileo.0g.ai/address/0xde5eCbdf2e9601C4B4a08899EAa836081011F7ac) |
+| SkillEscrow | [`0x9C7af8B9e41555ce384a67f563Fa0d20D1dD9DFc`](https://chainscan-galileo.0g.ai/address/0x9C7af8B9e41555ce384a67f563Fa0d20D1dD9DFc) |
 
 Explorer: https://chainscan-galileo.0g.ai
+
+> Note: 0G relaunched Galileo with chainId `16602` (not the originally documented `16601`). The `.env.example` reflects the live value.
 
 ---
 
