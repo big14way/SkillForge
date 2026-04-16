@@ -34,7 +34,6 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
     error Unauthorized();
     error AlreadyExists();
     error ExpiredAuthorization();
-    error NonexistentToken();
 
     constructor(address initialOwner) ERC721("SkillForge Skill INFT", "SKILL") Ownable(initialOwner) {
         _setDefaultRoyalty(initialOwner, _CREATOR_ROYALTY_BPS);
