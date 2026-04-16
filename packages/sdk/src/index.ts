@@ -3,6 +3,9 @@
 // Modules are added to this barrel as they're implemented. Anything not yet
 // re-exported is internal and subject to churn.
 
+export { SkillForgeClient } from './client.js';
+export type { SkillForgeConfig, SkillView } from './client.js';
+
 export * from './types.js';
 export * as Contracts from './contracts/index.js';
 
@@ -14,5 +17,27 @@ export type { StorageClientConfig, StorageUploadResult } from './storage/Storage
 
 export { MemoryClient, MemoryError } from './storage/MemoryClient.js';
 export type { MemoryClientConfig } from './storage/MemoryClient.js';
+
+export {
+  ComputeClient,
+  ComputeError,
+  InvalidAttestationError,
+} from './compute/ComputeClient.js';
+export type {
+  ComputeClientConfig,
+  ProviderInfo,
+  Attestation,
+  InferenceResult,
+} from './compute/ComputeClient.js';
+
+export {
+  encodeAttestation,
+  decodeAttestation,
+  computeAttestationDigest,
+  hashRequest,
+  hashResponse,
+  assertValidSignature,
+} from './compute/attestation.js';
+export type { SignedAttestation } from './compute/attestation.js';
 
 export { logger } from './logger.js';
