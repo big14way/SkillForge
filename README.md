@@ -134,20 +134,31 @@ Explorer: https://chainscan-galileo.0g.ai
 ```
 SkillForge/
 ├── contracts/           Foundry workspace — Solidity 0.8.24
-│   ├── src/             SkillINFT, SkillRegistry, SkillEscrow
-│   ├── test/            Foundry unit + fuzz tests (67 tests, 97% line coverage)
+│   ├── src/             SkillINFT, SkillRegistry, SkillEscrow, AttestationVerifier
+│   ├── test/            Foundry unit + fuzz tests (75 tests)
 │   └── script/          Deploy.s.sol
+├── packages/
+│   ├── sdk/             @skillforge/sdk — crypto, storage, KV, compute clients
+│   ├── services/        @skillforge/services — publisher, consumer, scorer, oracle, memory
+│   └── cli/             @skillforge/cli — demo CLI (init / list / publish / rent / invoke)
+├── scripts/
+│   └── export-abis.mjs  Regenerate typed ABIs from Foundry artifacts
 └── docs/
-    ├── ARCHITECTURE.md  System diagram + data flow details
-    └── WEEK1_DELIVERABLES.md
+    ├── ARCHITECTURE.md
+    ├── WEEK1_DELIVERABLES.md
+    └── WEEK2_DELIVERABLES.md
 ```
+
+### Chain library note
+
+Both `@0gfoundation/0g-ts-sdk` and `@0glabs/0g-serving-broker` declare **ethers v6** as a peer dependency. To avoid shipping two chain libraries, the SkillForge SDK is built on ethers v6 directly rather than viem.
 
 ---
 
 ## Roadmap
 
-- **Week 1 — Contracts scaffold** ✅ *this release*
-- **Week 2 — 0G Storage + Compute integration** (TypeScript service layer, real TeeML verifier)
+- **Week 1 — Contracts scaffold** ✅
+- **Week 2 — 0G Storage + Compute integration** ✅ *this release*
 - **Week 3 — OpenClaw MCP server + Next.js marketplace UI**
 - **Week 4 — Mainnet deployment + demo video**
 
