@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import {ISkillRegistry} from "./interfaces/ISkillRegistry.sol";
-import {SkillTypes} from "./libraries/SkillTypes.sol";
+import { ISkillRegistry } from "./interfaces/ISkillRegistry.sol";
+import { SkillTypes } from "./libraries/SkillTypes.sol";
 
 /// @title SkillRegistry
 /// @notice On-chain directory of SkillForge skills. Provides discovery + indexing

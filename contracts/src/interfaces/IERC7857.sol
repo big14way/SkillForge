@@ -31,23 +31,15 @@ interface IERC7857 {
     /// @notice Transfer an INFT with TEE-oracle re-encryption metadata.
     /// @dev In Week 1 the `proof` argument is validated for non-emptiness only;
     ///      full attestation verification lands when the 0G Compute oracle is wired up.
-    function transfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes calldata sealedKey,
-        bytes calldata proof
-    ) external;
+    function transfer(address from, address to, uint256 tokenId, bytes calldata sealedKey, bytes calldata proof)
+        external;
 
     /// @notice Clone an INFT (creates a new token with the same underlying payload).
     /// @dev Week 1 stub: the caller must be the owner of `tokenId`. Real semantics
     ///      require the TEE oracle to re-seal the payload for `to`.
-    function clone(
-        uint256 tokenId,
-        address to,
-        bytes calldata sealedKey,
-        bytes calldata proof
-    ) external returns (uint256 newTokenId);
+    function clone(uint256 tokenId, address to, bytes calldata sealedKey, bytes calldata proof)
+        external
+        returns (uint256 newTokenId);
 
     /// @notice Grant `user` temporary usage rights on `tokenId` until `expiresAt`.
     /// @dev Must only be callable by the current owner of the token.

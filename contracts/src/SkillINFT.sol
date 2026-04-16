@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {ERC2981} from "@openzeppelin/contracts/token/common/ERC2981.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { ERC2981 } from "@openzeppelin/contracts/token/common/ERC2981.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {IERC7857} from "./interfaces/IERC7857.sol";
+import { IERC7857 } from "./interfaces/IERC7857.sol";
 
 /// @title SkillINFT
 /// @notice ERC-7857 "Intelligent NFT" implementation for SkillForge skills.
@@ -67,13 +67,10 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
     ///      The real implementation will call the 0G Compute TEE oracle to verify
     ///      that `proof` attests to a correct re-encryption of the payload under
     ///      `to`'s public key.
-    function transfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes calldata sealedKey,
-        bytes calldata proof
-    ) external override {
+    function transfer(address from, address to, uint256 tokenId, bytes calldata sealedKey, bytes calldata proof)
+        external
+        override
+    {
         _requireOwned(tokenId);
         if (ownerOf(tokenId) != from) revert NotOwner();
         if (msg.sender != from && !isApprovedForAll(from, msg.sender) && getApproved(tokenId) != msg.sender) {
@@ -87,12 +84,11 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
     /// @inheritdoc IERC7857
     /// @dev Week 1 stub: only the token owner may clone. Real semantics require
     ///      TEE re-sealing of the payload for the clone recipient.
-    function clone(
-        uint256 tokenId,
-        address to,
-        bytes calldata sealedKey,
-        bytes calldata proof
-    ) external override returns (uint256 newTokenId) {
+    function clone(uint256 tokenId, address to, bytes calldata sealedKey, bytes calldata proof)
+        external
+        override
+        returns (uint256 newTokenId)
+    {
         _requireOwned(tokenId);
         if (ownerOf(tokenId) != msg.sender) revert NotOwner();
         if (to == address(0)) revert Unauthorized();

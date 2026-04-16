@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {SkillTypes} from "../libraries/SkillTypes.sol";
+import { SkillTypes } from "../libraries/SkillTypes.sol";
 
 /// @title ISkillEscrow
 /// @notice Public surface of the SkillForge 8-state rental escrow.

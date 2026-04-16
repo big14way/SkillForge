@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Script, console2} from "forge-std/Script.sol";
+import { Script, console2 } from "forge-std/Script.sol";
 
-import {SkillINFT} from "../src/SkillINFT.sol";
-import {SkillRegistry} from "../src/SkillRegistry.sol";
-import {SkillEscrow} from "../src/SkillEscrow.sol";
+import { SkillINFT } from "../src/SkillINFT.sol";
+import { SkillRegistry } from "../src/SkillRegistry.sol";
+import { SkillEscrow } from "../src/SkillEscrow.sol";
 
 /// @title Deploy
 /// @notice Wires SkillINFT, SkillRegistry, and SkillEscrow on 0G Chain (Galileo).

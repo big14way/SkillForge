@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {BaseTest} from "./helpers/BaseTest.sol";
-import {SkillINFT} from "../src/SkillINFT.sol";
-import {SkillRegistry} from "../src/SkillRegistry.sol";
-import {SkillEscrow} from "../src/SkillEscrow.sol";
-import {SkillTypes} from "../src/libraries/SkillTypes.sol";
+import { BaseTest } from "./helpers/BaseTest.sol";
+import { SkillINFT } from "../src/SkillINFT.sol";
+import { SkillRegistry } from "../src/SkillRegistry.sol";
+import { SkillEscrow } from "../src/SkillEscrow.sol";
+import { SkillTypes } from "../src/libraries/SkillTypes.sol";
 
 /// @dev Malicious creator that attempts to re-enter `completeRental` during
 ///      payout so the reentrancy guard can be exercised.
@@ -71,7 +71,7 @@ contract SkillEscrowTest is BaseTest {
         rentalId = escrow.requestRental(skillTokenId);
 
         vm.prank(renter);
-        escrow.fundRental{value: PRICE}(rentalId);
+        escrow.fundRental{ value: PRICE }(rentalId);
     }
 
     function _runThroughSubmission(uint256 rentalId, bytes32 workProof) internal {
@@ -136,7 +136,7 @@ contract SkillEscrowTest is BaseTest {
 
         vm.expectRevert(SkillEscrow.InsufficientPayment.selector);
         vm.prank(renter);
-        escrow.fundRental{value: PRICE - 1}(rentalId);
+        escrow.fundRental{ value: PRICE - 1 }(rentalId);
     }
 
     function test_Fund_RevertsForNonRenter() public {
@@ -146,7 +146,7 @@ contract SkillEscrowTest is BaseTest {
         vm.deal(stranger, 10 ether);
         vm.expectRevert(SkillEscrow.NotRenter.selector);
         vm.prank(stranger);
-        escrow.fundRental{value: PRICE}(rentalId);
+        escrow.fundRental{ value: PRICE }(rentalId);
     }
 
     function test_Fund_RevertsInWrongState() public {
@@ -154,7 +154,7 @@ contract SkillEscrowTest is BaseTest {
 
         vm.expectRevert(SkillEscrow.InvalidState.selector);
         vm.prank(renter);
-        escrow.fundRental{value: PRICE}(rentalId);
+        escrow.fundRental{ value: PRICE }(rentalId);
     }
 
     function test_Authorize_RevertsBeforeFunding() public {
@@ -355,7 +355,7 @@ contract SkillEscrowTest is BaseTest {
         vm.prank(renter);
         uint256 rentalId = escrow.requestRental(evilToken);
         vm.prank(renter);
-        escrow.fundRental{value: PRICE}(rentalId);
+        escrow.fundRental{ value: PRICE }(rentalId);
 
         vm.prank(address(attacker));
         escrow.authorizeAccess(rentalId);
@@ -387,7 +387,7 @@ contract SkillEscrowTest is BaseTest {
         vm.prank(renter);
         uint256 rentalId = escrow.requestRental(newToken);
         vm.prank(renter);
-        escrow.fundRental{value: price}(rentalId);
+        escrow.fundRental{ value: price }(rentalId);
 
         vm.prank(creator);
         escrow.authorizeAccess(rentalId);

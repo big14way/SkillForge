@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {BaseTest} from "./helpers/BaseTest.sol";
-import {SkillINFT} from "../src/SkillINFT.sol";
-import {SkillRegistry} from "../src/SkillRegistry.sol";
-import {SkillTypes} from "../src/libraries/SkillTypes.sol";
+import { BaseTest } from "./helpers/BaseTest.sol";
+import { SkillINFT } from "../src/SkillINFT.sol";
+import { SkillRegistry } from "../src/SkillRegistry.sol";
+import { SkillTypes } from "../src/libraries/SkillTypes.sol";
 
 contract SkillRegistryTest is BaseTest {
     SkillINFT internal inft;

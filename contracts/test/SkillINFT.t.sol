@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {BaseTest} from "./helpers/BaseTest.sol";
-import {SkillINFT} from "../src/SkillINFT.sol";
-import {IERC7857} from "../src/interfaces/IERC7857.sol";
-import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
+import { BaseTest } from "./helpers/BaseTest.sol";
+import { SkillINFT } from "../src/SkillINFT.sol";
+import { IERC7857 } from "../src/interfaces/IERC7857.sol";
+import { IERC721Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 contract SkillINFTTest is BaseTest {
     SkillINFT internal inft;

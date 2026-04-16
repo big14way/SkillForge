@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
-import {ISkillEscrow} from "./interfaces/ISkillEscrow.sol";
-import {ISkillRegistry} from "./interfaces/ISkillRegistry.sol";
-import {IERC7857} from "./interfaces/IERC7857.sol";
-import {SkillTypes} from "./libraries/SkillTypes.sol";
+import { ISkillEscrow } from "./interfaces/ISkillEscrow.sol";
+import { ISkillRegistry } from "./interfaces/ISkillRegistry.sol";
+import { IERC7857 } from "./interfaces/IERC7857.sol";
+import { SkillTypes } from "./libraries/SkillTypes.sol";
 
 /// @title SkillEscrow
 /// @notice 8-state rental lifecycle with escrowed payment, TeeML quality scoring

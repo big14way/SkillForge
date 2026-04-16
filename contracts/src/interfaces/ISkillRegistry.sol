@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {SkillTypes} from "../libraries/SkillTypes.sol";
+import { SkillTypes } from "../libraries/SkillTypes.sol";
 
 /// @title ISkillRegistry
 /// @notice Public surface of the SkillForge discovery layer.
@@ -9,11 +9,7 @@ import {SkillTypes} from "../libraries/SkillTypes.sol";
 ///      SkillEscrow is the only contract permitted to mutate quality/usage metrics.
 interface ISkillRegistry {
     event SkillRegistered(
-        uint256 indexed tokenId,
-        address indexed creator,
-        string category,
-        uint256 pricePerUse,
-        string storageURI
+        uint256 indexed tokenId, address indexed creator, string category, uint256 pricePerUse, string storageURI
     );
     event SkillDeactivated(uint256 indexed tokenId);
     event QualityScoreUpdated(uint256 indexed tokenId, uint256 newScore);
