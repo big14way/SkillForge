@@ -111,9 +111,13 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
     }
 
     /// @inheritdoc IERC7857
+    /// @dev Callable by the token owner or any approved operator (typically the
+    ///      SkillEscrow contract after a renter funds a rental).
     function authorizeUsage(uint256 tokenId, address user, uint256 expiresAt) external override {
-        _requireOwned(tokenId);
-        if (ownerOf(tokenId) != msg.sender) revert NotOwner();
+        address owner = _requireOwned(tokenId);
+        if (owner != msg.sender && !isApprovedForAll(owner, msg.sender) && getApproved(tokenId) != msg.sender) {
+            revert NotOwner();
+        }
         if (user == address(0)) revert Unauthorized();
         if (expiresAt <= block.timestamp) revert ExpiredAuthorization();
 
