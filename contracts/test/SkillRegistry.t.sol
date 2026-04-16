@@ -13,8 +13,9 @@ contract SkillRegistryTest is BaseTest {
     address internal escrow = makeAddr("escrow");
 
     function setUp() public {
+        address oracleAddr = _wallet("oracle").addr;
         vm.startPrank(deployer);
-        inft = new SkillINFT(deployer);
+        inft = new SkillINFT(deployer, oracleAddr);
         registry = new SkillRegistry(deployer, address(inft));
         registry.setSkillEscrow(escrow);
         vm.stopPrank();

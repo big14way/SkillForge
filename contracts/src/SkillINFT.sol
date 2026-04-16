@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { ERC2981 } from "@openzeppelin/contracts/token/common/ERC2981.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { IERC7857 } from "./interfaces/IERC7857.sol";
 
@@ -18,10 +19,10 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
     /// @dev Creator royalty on secondary sales, in basis points (5%).
     uint96 private constant _CREATOR_ROYALTY_BPS = 500;
 
-    /// @dev Minimum sealedKey / proof length accepted by the Week 1 stub.
-    uint256 private constant _MIN_STUB_PROOF_LENGTH = 1;
-
     uint256 private _nextTokenId;
+
+    /// @notice Address whose signature is accepted as a re-encryption oracle proof.
+    address public oracleAddress;
 
     mapping(uint256 => bytes32) private _dataHash;
     mapping(uint256 => string) private _storageURI;
@@ -34,9 +35,27 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
     error Unauthorized();
     error AlreadyExists();
     error ExpiredAuthorization();
+    error OracleUnset();
 
-    constructor(address initialOwner) ERC721("SkillForge Skill INFT", "SKILL") Ownable(initialOwner) {
+    event OracleUpdated(address indexed newOracle);
+    event KeyResealed(uint256 indexed tokenId, address indexed from, address indexed to, bytes32 sealedKeyHash);
+
+    constructor(address initialOwner, address initialOracle)
+        ERC721("SkillForge Skill INFT", "SKILL")
+        Ownable(initialOwner)
+    {
         _setDefaultRoyalty(initialOwner, _CREATOR_ROYALTY_BPS);
+        if (initialOracle != address(0)) {
+            oracleAddress = initialOracle;
+            emit OracleUpdated(initialOracle);
+        }
+    }
+
+    /// @notice Rotate the re-encryption oracle address. Owner-only.
+    function setOracle(address newOracle) external onlyOwner {
+        if (newOracle == address(0)) revert Unauthorized();
+        oracleAddress = newOracle;
+        emit OracleUpdated(newOracle);
     }
 
     /// @inheritdoc IERC7857
@@ -63,10 +82,8 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
     }
 
     /// @inheritdoc IERC7857
-    /// @dev Week 1 stub: enforces owner semantics and non-empty re-encryption blobs.
-    ///      The real implementation will call the 0G Compute TEE oracle to verify
-    ///      that `proof` attests to a correct re-encryption of the payload under
-    ///      `to`'s public key.
+    /// @dev v2: the oracle signs keccak256(abi.encodePacked(tokenId, from, to, keccak256(sealedKey))).
+    ///      The on-chain verifier recovers the signer and matches it against `oracleAddress`.
     function transfer(address from, address to, uint256 tokenId, bytes calldata sealedKey, bytes calldata proof)
         external
         override
@@ -76,14 +93,15 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
         if (msg.sender != from && !isApprovedForAll(from, msg.sender) && getApproved(tokenId) != msg.sender) {
             revert Unauthorized();
         }
-        _validateStubProof(sealedKey, proof);
+        bytes32 sealedKeyHash = _verifyOracleProof(tokenId, from, to, sealedKey, proof);
 
         _safeTransfer(from, to, tokenId, "");
+        emit KeyResealed(tokenId, from, to, sealedKeyHash);
     }
 
     /// @inheritdoc IERC7857
-    /// @dev Week 1 stub: only the token owner may clone. Real semantics require
-    ///      TEE re-sealing of the payload for the clone recipient.
+    /// @dev v2: same oracle proof check as `transfer`, but the current owner
+    ///      stays the owner of `tokenId` and a fresh token is minted for `to`.
     function clone(uint256 tokenId, address to, bytes calldata sealedKey, bytes calldata proof)
         external
         override
@@ -92,7 +110,7 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
         _requireOwned(tokenId);
         if (ownerOf(tokenId) != msg.sender) revert NotOwner();
         if (to == address(0)) revert Unauthorized();
-        _validateStubProof(sealedKey, proof);
+        bytes32 sealedKeyHash = _verifyOracleProof(tokenId, msg.sender, to, sealedKey, proof);
 
         unchecked {
             newTokenId = ++_nextTokenId;
@@ -104,6 +122,7 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
         _setTokenRoyalty(newTokenId, msg.sender, _CREATOR_ROYALTY_BPS);
 
         emit SkillMinted(newTokenId, to, _dataHash[tokenId], _storageURI[tokenId]);
+        emit KeyResealed(newTokenId, msg.sender, to, sealedKeyHash);
     }
 
     /// @inheritdoc IERC7857
@@ -162,9 +181,20 @@ contract SkillINFT is ERC721, ERC2981, Ownable, IERC7857 {
         return interfaceId == type(IERC7857).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    function _validateStubProof(bytes calldata sealedKey, bytes calldata proof) internal pure {
-        if (sealedKey.length < _MIN_STUB_PROOF_LENGTH || proof.length < _MIN_STUB_PROOF_LENGTH) {
-            revert InvalidProof();
-        }
+    /// @dev Recovers the signer from `proof` and checks it equals `oracleAddress`.
+    ///      Returns keccak256(sealedKey) so callers can emit it in an event.
+    function _verifyOracleProof(
+        uint256 tokenId,
+        address from,
+        address to,
+        bytes calldata sealedKey,
+        bytes calldata proof
+    ) internal view returns (bytes32 sealedKeyHash) {
+        if (oracleAddress == address(0)) revert OracleUnset();
+        if (sealedKey.length == 0) revert InvalidProof();
+        sealedKeyHash = keccak256(sealedKey);
+        bytes32 digest = keccak256(abi.encodePacked(tokenId, from, to, sealedKeyHash));
+        address recovered = ECDSA.recover(digest, proof);
+        if (recovered != oracleAddress) revert InvalidProof();
     }
 }

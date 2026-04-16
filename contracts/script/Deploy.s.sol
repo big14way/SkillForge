@@ -8,11 +8,13 @@ import { SkillRegistry } from "../src/SkillRegistry.sol";
 import { SkillEscrow } from "../src/SkillEscrow.sol";
 
 /// @title Deploy
-/// @notice Wires SkillINFT, SkillRegistry, and SkillEscrow on 0G Chain (Galileo).
-/// @dev Reads `PRIVATE_KEY` and `PROTOCOL_TREASURY` from the environment. If
-///      `PROTOCOL_TREASURY` is unset, the treasury defaults to the deployer.
-///      On successful broadcast, writes deployment addresses to
-///      `deployments/galileo.json`.
+/// @notice Wires the v2 SkillINFT, SkillRegistry, and SkillEscrow on 0G Chain (Galileo).
+/// @dev Required env:
+///        PRIVATE_KEY           — deployer EOA key
+///        PROTOCOL_TREASURY     — 5% fee recipient (defaults to deployer)
+///        ORACLE_ADDRESS        — ERC-7857 re-encryption oracle (defaults to deployer)
+///        SCORER_ADDRESS        — whitelisted quality scorer (defaults to deployer)
+///      On successful broadcast, writes addresses to deployments/galileo.json.
 contract Deploy is Script {
     struct Deployment {
         address skillINFT;
@@ -20,12 +22,16 @@ contract Deploy is Script {
         address skillEscrow;
         address deployer;
         address treasury;
+        address oracle;
+        address scorer;
     }
 
     function run() external returns (Deployment memory deployment) {
         uint256 deployerKey = vm.envOr("PRIVATE_KEY", uint256(0));
         address deployer = deployerKey == 0 ? msg.sender : vm.addr(deployerKey);
         address treasury = vm.envOr("PROTOCOL_TREASURY", deployer);
+        address oracle = vm.envOr("ORACLE_ADDRESS", deployer);
+        address scorer = vm.envOr("SCORER_ADDRESS", deployer);
 
         if (deployerKey != 0) {
             vm.startBroadcast(deployerKey);
@@ -33,9 +39,9 @@ contract Deploy is Script {
             vm.startBroadcast();
         }
 
-        SkillINFT inft = new SkillINFT(deployer);
+        SkillINFT inft = new SkillINFT(deployer, oracle);
         SkillRegistry registry = new SkillRegistry(deployer, address(inft));
-        SkillEscrow escrow = new SkillEscrow(deployer, address(registry), address(inft), treasury);
+        SkillEscrow escrow = new SkillEscrow(deployer, address(registry), address(inft), treasury, scorer);
 
         registry.setSkillEscrow(address(escrow));
 
@@ -46,7 +52,9 @@ contract Deploy is Script {
             skillRegistry: address(registry),
             skillEscrow: address(escrow),
             deployer: deployer,
-            treasury: treasury
+            treasury: treasury,
+            oracle: oracle,
+            scorer: scorer
         });
 
         _logDeployment(deployment);
@@ -54,18 +62,21 @@ contract Deploy is Script {
     }
 
     function _logDeployment(Deployment memory d) internal pure {
-        console2.log("=== SkillForge deployment ===");
+        console2.log("=== SkillForge v2 deployment ===");
         console2.log("SkillINFT:     ", d.skillINFT);
         console2.log("SkillRegistry: ", d.skillRegistry);
         console2.log("SkillEscrow:   ", d.skillEscrow);
         console2.log("Deployer:      ", d.deployer);
         console2.log("Treasury:      ", d.treasury);
+        console2.log("Oracle:        ", d.oracle);
+        console2.log("Scorer:        ", d.scorer);
     }
 
     function _writeDeploymentArtifact(Deployment memory d) internal {
         string memory json = string.concat(
             "{\n",
             '  "chain": "galileo",\n',
+            '  "version": "v2",\n',
             '  "skillINFT": "',
             vm.toString(d.skillINFT),
             '",\n',
@@ -80,6 +91,12 @@ contract Deploy is Script {
             '",\n',
             '  "treasury": "',
             vm.toString(d.treasury),
+            '",\n',
+            '  "oracle": "',
+            vm.toString(d.oracle),
+            '",\n',
+            '  "scorer": "',
+            vm.toString(d.scorer),
             '"\n}\n'
         );
 

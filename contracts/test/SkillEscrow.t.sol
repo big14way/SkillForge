@@ -6,6 +6,7 @@ import { SkillINFT } from "../src/SkillINFT.sol";
 import { SkillRegistry } from "../src/SkillRegistry.sol";
 import { SkillEscrow } from "../src/SkillEscrow.sol";
 import { SkillTypes } from "../src/libraries/SkillTypes.sol";
+import { AttestationVerifier } from "../src/libraries/AttestationVerifier.sol";
 
 /// @dev Malicious creator that attempts to re-enter `completeRental` during
 ///      payout so the reentrancy guard can be exercised.
@@ -42,13 +43,16 @@ contract SkillEscrowTest is BaseTest {
     uint256 internal skillTokenId;
     uint256 internal constant PRICE = 1 ether;
 
-    bytes internal constant STUB_TEEML = hex"cafebabe";
+    Wallet internal scorer;
+    Wallet internal oracle;
 
     function setUp() public {
+        scorer = _wallet("scorer");
+        oracle = _wallet("oracle");
         vm.startPrank(deployer);
-        inft = new SkillINFT(deployer);
+        inft = new SkillINFT(deployer, oracle.addr);
         registry = new SkillRegistry(deployer, address(inft));
-        escrow = new SkillEscrow(deployer, address(registry), address(inft), treasury);
+        escrow = new SkillEscrow(deployer, address(registry), address(inft), treasury, scorer.addr);
         registry.setSkillEscrow(address(escrow));
         vm.stopPrank();
 
@@ -60,6 +64,24 @@ contract SkillEscrowTest is BaseTest {
         vm.stopPrank();
 
         vm.deal(renter, 100 ether);
+    }
+
+    /// @dev Build an attestation signed by the scorer wallet — binds score so
+    ///      replays with a different score are rejected on-chain.
+    function _signedAttestation(uint256 qualityScore, address teemlProvider, bytes32 responseHash)
+        internal
+        returns (bytes memory)
+    {
+        bytes32 requestHash = keccak256("skillforge.request.canonical");
+        bytes32 digest = keccak256(abi.encodePacked(requestHash, responseHash, teemlProvider, qualityScore));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(scorer.key, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        return abi.encode(requestHash, responseHash, teemlProvider, qualityScore, signature);
+    }
+
+    /// @dev Shortcut: default-provider attestation matching whatever score is requested.
+    function _stubAttestation(uint256 qualityScore) internal returns (bytes memory) {
+        return _signedAttestation(qualityScore, makeAddr("teeml-provider"), keccak256("work-response"));
     }
 
     // ---------------------------------------------------------------------
@@ -87,7 +109,7 @@ contract SkillEscrowTest is BaseTest {
         _runThroughSubmission(rentalId, keccak256("work"));
 
         vm.prank(arbitrator);
-        escrow.verifyWork(rentalId, 9200, STUB_TEEML);
+        escrow.verifyWork(rentalId, 9200, _stubAttestation(9200));
 
         uint256 creatorBalanceBefore = creator.balance;
         uint256 treasuryBalanceBefore = treasury.balance;
@@ -199,15 +221,44 @@ contract SkillEscrowTest is BaseTest {
         _runThroughSubmission(rentalId, keccak256("w"));
 
         vm.expectRevert(SkillEscrow.InvalidScore.selector);
-        escrow.verifyWork(rentalId, 10_001, STUB_TEEML);
+        escrow.verifyWork(rentalId, 10_001, _stubAttestation(10_001));
     }
 
     function test_Verify_RevertsOnEmptyAttestation() public {
         uint256 rentalId = _requestAndFund();
         _runThroughSubmission(rentalId, keccak256("w"));
 
-        vm.expectRevert(SkillEscrow.InvalidAttestation.selector);
+        // Empty blob can't be ABI-decoded into the Attestation struct.
+        vm.expectRevert();
         escrow.verifyWork(rentalId, 9000, "");
+    }
+
+    function test_Verify_RevertsWhenScorerNotWhitelisted() public {
+        uint256 rentalId = _requestAndFund();
+        _runThroughSubmission(rentalId, keccak256("w"));
+
+        // Sign with an unknown key.
+        Wallet memory rogue = _wallet("rogue-scorer");
+        bytes32 requestHash = keccak256("req");
+        bytes32 responseHash = keccak256("resp");
+        address prov = makeAddr("teeml-provider");
+        uint256 qs = 8500;
+        bytes32 digest = keccak256(abi.encodePacked(requestHash, responseHash, prov, qs));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(rogue.key, digest);
+        bytes memory rogueAtt = abi.encode(requestHash, responseHash, prov, qs, abi.encodePacked(r, s, v));
+
+        vm.expectRevert(AttestationVerifier.ProviderNotWhitelisted.selector);
+        escrow.verifyWork(rentalId, qs, rogueAtt);
+    }
+
+    function test_Verify_RevertsOnScoreMismatch() public {
+        uint256 rentalId = _requestAndFund();
+        _runThroughSubmission(rentalId, keccak256("w"));
+
+        // Attestation signed for 9000, but caller claims 8500 → mismatch.
+        bytes memory att = _stubAttestation(9000);
+        vm.expectRevert(AttestationVerifier.ScoreMismatch.selector);
+        escrow.verifyWork(rentalId, 8500, att);
     }
 
     function test_Complete_RevertsBeforeVerify() public {
@@ -333,13 +384,13 @@ contract SkillEscrowTest is BaseTest {
 
     function test_Constructor_RevertsOnZeroAddresses() public {
         vm.expectRevert(SkillEscrow.ZeroAddress.selector);
-        new SkillEscrow(deployer, address(0), address(inft), treasury);
+        new SkillEscrow(deployer, address(0), address(inft), treasury, scorer.addr);
 
         vm.expectRevert(SkillEscrow.ZeroAddress.selector);
-        new SkillEscrow(deployer, address(registry), address(0), treasury);
+        new SkillEscrow(deployer, address(registry), address(0), treasury, scorer.addr);
 
         vm.expectRevert(SkillEscrow.ZeroAddress.selector);
-        new SkillEscrow(deployer, address(registry), address(inft), address(0));
+        new SkillEscrow(deployer, address(registry), address(inft), address(0), scorer.addr);
     }
 
     function test_Complete_ReentrancyGuardTrips() public {
@@ -361,7 +412,7 @@ contract SkillEscrowTest is BaseTest {
         escrow.authorizeAccess(rentalId);
         vm.prank(renter);
         escrow.submitWork(rentalId, keccak256("w"));
-        escrow.verifyWork(rentalId, 8000, STUB_TEEML);
+        escrow.verifyWork(rentalId, 8000, _stubAttestation(8000));
 
         attacker.setRental(rentalId);
 
@@ -393,7 +444,7 @@ contract SkillEscrowTest is BaseTest {
         escrow.authorizeAccess(rentalId);
         vm.prank(renter);
         escrow.submitWork(rentalId, keccak256("w"));
-        escrow.verifyWork(rentalId, 8000, STUB_TEEML);
+        escrow.verifyWork(rentalId, 8000, _stubAttestation(8000));
 
         uint256 creatorBefore = creator.balance;
         uint256 treasuryBefore = treasury.balance;

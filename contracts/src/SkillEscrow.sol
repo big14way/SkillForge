@@ -10,6 +10,7 @@ import { ISkillEscrow } from "./interfaces/ISkillEscrow.sol";
 import { ISkillRegistry } from "./interfaces/ISkillRegistry.sol";
 import { IERC7857 } from "./interfaces/IERC7857.sol";
 import { SkillTypes } from "./libraries/SkillTypes.sol";
+import { AttestationVerifier } from "./libraries/AttestationVerifier.sol";
 
 /// @title SkillEscrow
 /// @notice 8-state rental lifecycle with escrowed payment, TeeML quality scoring
@@ -29,9 +30,6 @@ contract SkillEscrow is ISkillEscrow, Ownable, Pausable, ReentrancyGuard {
     /// @notice Basis points denominator.
     uint256 public constant BPS_DENOMINATOR = 10_000;
 
-    /// @notice Minimum accepted TeeML attestation size (Week 1 stub).
-    uint256 private constant _MIN_ATTESTATION_LENGTH = 1;
-
     ISkillRegistry public immutable skillRegistry;
     IERC7857 public immutable skillINFT;
 
@@ -41,8 +39,12 @@ contract SkillEscrow is ISkillEscrow, Ownable, Pausable, ReentrancyGuard {
 
     mapping(uint256 => SkillTypes.Rental) private _rentals;
 
+    /// @notice Set of scorer oracle addresses authorized to sign quality attestations.
+    mapping(address => bool) public whitelistedScorers;
+
     event ProtocolFeeUpdated(uint256 newBps);
     event ProtocolTreasuryUpdated(address indexed newTreasury);
+    event ScorerWhitelistUpdated(address indexed scorer, bool allowed);
 
     error InvalidState();
     error NotRenter();
@@ -56,11 +58,24 @@ contract SkillEscrow is ISkillEscrow, Ownable, Pausable, ReentrancyGuard {
     error FeeTooHigh();
     error ZeroAddress();
 
-    constructor(address initialOwner, address registry_, address skillINFT_, address treasury_) Ownable(initialOwner) {
+    constructor(address initialOwner, address registry_, address skillINFT_, address treasury_, address initialScorer)
+        Ownable(initialOwner)
+    {
         if (registry_ == address(0) || skillINFT_ == address(0) || treasury_ == address(0)) revert ZeroAddress();
         skillRegistry = ISkillRegistry(registry_);
         skillINFT = IERC7857(skillINFT_);
         protocolTreasury = treasury_;
+        if (initialScorer != address(0)) {
+            whitelistedScorers[initialScorer] = true;
+            emit ScorerWhitelistUpdated(initialScorer, true);
+        }
+    }
+
+    /// @notice Add or revoke a scorer oracle allowed to sign attestations.
+    function setScorerWhitelisted(address scorer, bool allowed) external onlyOwner {
+        if (scorer == address(0)) revert ZeroAddress();
+        whitelistedScorers[scorer] = allowed;
+        emit ScorerWhitelistUpdated(scorer, allowed);
     }
 
     // ---------------------------------------------------------------------
@@ -156,6 +171,10 @@ contract SkillEscrow is ISkillEscrow, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ISkillEscrow
+    /// @dev v2: full attestation verification. The attestation must be signed by
+    ///      a whitelisted scorer oracle and must bind to `qualityScore` — we use
+    ///      the score in the signed digest so a replay with a different score
+    ///      is rejected.
     function verifyWork(uint256 rentalId, uint256 qualityScore, bytes calldata teemlAttestation)
         external
         whenNotPaused
@@ -164,7 +183,8 @@ contract SkillEscrow is ISkillEscrow, Ownable, Pausable, ReentrancyGuard {
         _requireRentalExists(rental);
         if (rental.state != SkillTypes.RentalState.Submitted) revert InvalidState();
         if (qualityScore > BPS_DENOMINATOR) revert InvalidScore();
-        if (teemlAttestation.length < _MIN_ATTESTATION_LENGTH) revert InvalidAttestation();
+
+        AttestationVerifier.verify(teemlAttestation, whitelistedScorers, qualityScore);
 
         rental.qualityScore = qualityScore;
         rental.state = SkillTypes.RentalState.Verified;

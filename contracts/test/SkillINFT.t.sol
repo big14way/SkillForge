@@ -13,9 +13,23 @@ contract SkillINFTTest is BaseTest {
     event UsageAuthorized(uint256 indexed tokenId, address indexed user, uint256 expiresAt);
     event MetadataUpdated(uint256 indexed tokenId, bytes32 newDataHash, string newStorageURI);
 
+    Wallet internal oracle;
+
     function setUp() public {
+        oracle = _wallet("oracle");
         vm.prank(deployer);
-        inft = new SkillINFT(deployer);
+        inft = new SkillINFT(deployer, oracle.addr);
+    }
+
+    /// @dev Build a transfer/clone proof signed by the oracle for (tokenId, from, to, sealedKey).
+    function _oracleProof(uint256 tokenId, address from, address to, bytes memory sealedKey)
+        internal
+        returns (bytes memory)
+    {
+        bytes32 sealedKeyHash = keccak256(sealedKey);
+        bytes32 digest = keccak256(abi.encodePacked(tokenId, from, to, sealedKeyHash));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(oracle.key, digest);
+        return abi.encodePacked(r, s, v);
     }
 
     function _mintDefault() internal returns (uint256 tokenId) {
@@ -105,11 +119,12 @@ contract SkillINFTTest is BaseTest {
         assertFalse(inft.isAuthorized(tokenId, renter));
     }
 
-    function test_Transfer_SucceedsWithStubProof() public {
+    function test_Transfer_SucceedsWithOracleProof() public {
         uint256 tokenId = _mintDefault();
+        bytes memory proof = _oracleProof(tokenId, creator, renter, STUB_SEALED_KEY);
 
         vm.prank(creator);
-        inft.transfer(creator, renter, tokenId, STUB_SEALED_KEY, STUB_PROOF);
+        inft.transfer(creator, renter, tokenId, STUB_SEALED_KEY, proof);
 
         assertEq(inft.ownerOf(tokenId), renter);
     }
@@ -117,40 +132,59 @@ contract SkillINFTTest is BaseTest {
     function test_Transfer_RevertsOnEmptyProof() public {
         uint256 tokenId = _mintDefault();
 
-        vm.expectRevert(SkillINFT.InvalidProof.selector);
+        // Empty proof → ECDSAInvalidSignatureLength(0) from OZ.
+        vm.expectRevert();
         vm.prank(creator);
         inft.transfer(creator, renter, tokenId, STUB_SEALED_KEY, "");
     }
 
     function test_Transfer_RevertsOnEmptySealedKey() public {
         uint256 tokenId = _mintDefault();
+        bytes memory proof = _oracleProof(tokenId, creator, renter, STUB_SEALED_KEY);
 
         vm.expectRevert(SkillINFT.InvalidProof.selector);
         vm.prank(creator);
-        inft.transfer(creator, renter, tokenId, "", STUB_PROOF);
+        inft.transfer(creator, renter, tokenId, "", proof);
+    }
+
+    function test_Transfer_RevertsOnForgedProof() public {
+        uint256 tokenId = _mintDefault();
+        Wallet memory imposter = _wallet("imposter");
+        bytes32 digest = keccak256(abi.encodePacked(tokenId, creator, renter, keccak256(STUB_SEALED_KEY)));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(imposter.key, digest);
+        bytes memory badProof = abi.encodePacked(r, s, v);
+
+        vm.expectRevert(SkillINFT.InvalidProof.selector);
+        vm.prank(creator);
+        inft.transfer(creator, renter, tokenId, STUB_SEALED_KEY, badProof);
     }
 
     function test_Transfer_RevertsForNonOwner() public {
         uint256 tokenId = _mintDefault();
+        bytes memory proof = _oracleProof(tokenId, stranger, renter, STUB_SEALED_KEY);
 
         vm.expectRevert(SkillINFT.NotOwner.selector);
         vm.prank(stranger);
-        inft.transfer(stranger, renter, tokenId, STUB_SEALED_KEY, STUB_PROOF);
+        inft.transfer(stranger, renter, tokenId, STUB_SEALED_KEY, proof);
     }
 
     function test_Transfer_RevertsIfNotApproved() public {
         uint256 tokenId = _mintDefault();
+        bytes memory proof = _oracleProof(tokenId, creator, renter, STUB_SEALED_KEY);
 
         vm.expectRevert(SkillINFT.Unauthorized.selector);
         vm.prank(stranger);
-        inft.transfer(creator, renter, tokenId, STUB_SEALED_KEY, STUB_PROOF);
+        inft.transfer(creator, renter, tokenId, STUB_SEALED_KEY, proof);
     }
 
     function test_Clone_CopiesMetadataToNewToken() public {
         uint256 tokenId = _mintDefault();
+        // Oracle proof binds the source tokenId, not the new one — the contract
+        // verifies the proof *before* minting.
+        bytes memory proof = _oracleProof(tokenId, creator, renter, STUB_SEALED_KEY);
 
         vm.prank(creator);
-        uint256 newTokenId = inft.clone(tokenId, renter, STUB_SEALED_KEY, STUB_PROOF);
+        uint256 newTokenId = inft.clone(tokenId, renter, STUB_SEALED_KEY, proof);
 
         assertEq(newTokenId, 2);
         assertEq(inft.ownerOf(newTokenId), renter);
@@ -169,7 +203,8 @@ contract SkillINFTTest is BaseTest {
     function test_Clone_RevertsOnEmptyProof() public {
         uint256 tokenId = _mintDefault();
 
-        vm.expectRevert(SkillINFT.InvalidProof.selector);
+        // Empty signature blob → OZ ECDSAInvalidSignatureLength.
+        vm.expectRevert();
         vm.prank(creator);
         inft.clone(tokenId, renter, STUB_SEALED_KEY, "");
     }
