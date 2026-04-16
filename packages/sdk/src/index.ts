@@ -1,21 +1,18 @@
 // Public surface of @skillforge/sdk.
-
-export { SkillForgeClient } from './client.js';
-export type { SkillForgeConfig, SkillView } from './client.js';
+//
+// Modules are added to this barrel as they're implemented. Anything not yet
+// re-exported is internal and subject to churn.
 
 export * from './types.js';
 export * as Contracts from './contracts/index.js';
 
-export { encryptSkill, decryptSkill, computeDataHash } from './crypto/aes.js';
+export { encryptSkill, decryptSkill, computeDataHash, CryptoError } from './crypto/aes.js';
 export { sealKeyForRecipient, unsealKey, deriveAddressFromPubKey } from './crypto/keys.js';
 
-export { StorageClient } from './storage/StorageClient.js';
-export type { StorageUploadResult } from './storage/StorageClient.js';
+export { StorageClient, StorageError } from './storage/StorageClient.js';
+export type { StorageClientConfig, StorageUploadResult } from './storage/StorageClient.js';
 
-export { MemoryClient } from './storage/MemoryClient.js';
-
-export { ComputeClient, InvalidAttestationError } from './compute/ComputeClient.js';
-export type { Attestation, InferenceResult } from './compute/ComputeClient.js';
-export { encodeAttestation, decodeAttestation, computeAttestationDigest } from './compute/attestation.js';
+export { MemoryClient, MemoryError } from './storage/MemoryClient.js';
+export type { MemoryClientConfig } from './storage/MemoryClient.js';
 
 export { logger } from './logger.js';

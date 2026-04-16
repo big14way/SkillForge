@@ -49,7 +49,8 @@ export function unsealKey(sealedEnvelope: Hex, recipientPrivateKey: Hex): Buffer
     throw new CryptoError(`private key must be 32 bytes, got ${skBytes.length}`);
   }
   try {
-    return eciesDecrypt(Buffer.from(skBytes), Buffer.from(sealedBytes));
+    const decrypted = eciesDecrypt(Buffer.from(skBytes), Buffer.from(sealedBytes));
+    return Buffer.from(decrypted);
   } catch (err) {
     throw new CryptoError(`ECIES unseal failed: ${(err as Error).message}`);
   }
