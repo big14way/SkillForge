@@ -115,15 +115,17 @@ forge script script/Deploy.s.sol \
 
 ## Deployed addresses
 
-Live on **0G Galileo testnet (chainId 16602)** — deployed 2026-04-16.
+Live on **0G Galileo testnet (chainId 16602)** — v2 deployed 2026-04-16.
 
-| Contract | Address |
+| Contract | v2 (current) |
 | --- | --- |
-| SkillINFT | [`0xC3a201c2Dc904ae32a9a0adea3478EB252d5Cf88`](https://chainscan-galileo.0g.ai/address/0xC3a201c2Dc904ae32a9a0adea3478EB252d5Cf88) |
-| SkillRegistry | [`0xde5eCbdf2e9601C4B4a08899EAa836081011F7ac`](https://chainscan-galileo.0g.ai/address/0xde5eCbdf2e9601C4B4a08899EAa836081011F7ac) |
-| SkillEscrow | [`0x9C7af8B9e41555ce384a67f563Fa0d20D1dD9DFc`](https://chainscan-galileo.0g.ai/address/0x9C7af8B9e41555ce384a67f563Fa0d20D1dD9DFc) |
+| SkillINFT | [`0x8486E62b5975A4241818b564834A5f51ae2540B6`](https://chainscan-galileo.0g.ai/address/0x8486E62b5975A4241818b564834A5f51ae2540B6) |
+| SkillRegistry | [`0xe3D37E5c036CC0bb4E0A170D49cc9212ABc8f985`](https://chainscan-galileo.0g.ai/address/0xe3D37E5c036CC0bb4E0A170D49cc9212ABc8f985) |
+| SkillEscrow | [`0x6e6e076893c6b9eAc90463cd0E3021404F9B27B1`](https://chainscan-galileo.0g.ai/address/0x6e6e076893c6b9eAc90463cd0E3021404F9B27B1) |
 
-Explorer: https://chainscan-galileo.0g.ai
+Oracle + initial scorer are bootstrapped to the deployer (`0x208B…faE89`) and can be rotated via `setOracle` / `setScorerWhitelisted`.
+
+Explorer: https://chainscan-galileo.0g.ai · v1 history: [`docs/deployments-history.md`](docs/deployments-history.md)
 
 > Note: 0G relaunched Galileo with chainId `16602` (not the originally documented `16601`). The `.env.example` reflects the live value.
 
