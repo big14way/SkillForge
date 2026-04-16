@@ -24,6 +24,11 @@ export const SkillEscrowABI = [
         "name": "treasury_",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "initialScorer",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -334,6 +339,24 @@ export const SkillEscrowABI = [
   },
   {
     "type": "function",
+    "name": "setScorerWhitelisted",
+    "inputs": [
+      {
+        "name": "scorer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "allowed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "skillINFT",
     "inputs": [],
     "outputs": [
@@ -418,6 +441,25 @@ export const SkillEscrowABI = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "whitelistedScorers",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "event",
@@ -611,6 +653,25 @@ export const SkillEscrowABI = [
   },
   {
     "type": "event",
+    "name": "ScorerWhitelistUpdated",
+    "inputs": [
+      {
+        "name": "scorer",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "allowed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Unpaused",
     "inputs": [
       {
@@ -673,6 +734,33 @@ export const SkillEscrowABI = [
   },
   {
     "type": "error",
+    "name": "ECDSAInvalidSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ECDSAInvalidSignatureLength",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ECDSAInvalidSignatureS",
+    "inputs": [
+      {
+        "name": "s",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "EnforcedPause",
     "inputs": []
   },
@@ -708,7 +796,17 @@ export const SkillEscrowABI = [
   },
   {
     "type": "error",
+    "name": "InvalidSigner",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MalformedAttestation",
     "inputs": []
   },
   {
@@ -750,12 +848,27 @@ export const SkillEscrowABI = [
   },
   {
     "type": "error",
+    "name": "ProviderNotWhitelisted",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ReentrancyGuardReentrantCall",
     "inputs": []
   },
   {
     "type": "error",
     "name": "RentalNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ScoreMismatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ScoreOutOfRange",
     "inputs": []
   },
   {
