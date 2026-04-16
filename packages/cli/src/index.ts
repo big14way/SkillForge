@@ -7,6 +7,8 @@ import { runPublish } from './commands/publish.js';
 import { runRent } from './commands/rent.js';
 import { runInvoke } from './commands/invoke.js';
 import { runMemoryShow, runMemoryHistory } from './commands/memory.js';
+import { runMemoryInit } from './commands/memory-init.js';
+import { runComputeSetup } from './commands/compute-setup.js';
 import { ui } from './ui.js';
 
 loadDotenv();
@@ -50,8 +52,23 @@ program
   .action(runInvoke);
 
 const memory = program.command('memory').description('Per-agent persistent memory on 0G KV');
+memory
+  .command('init')
+  .description('Provision a fresh 0G KV stream for this wallet')
+  .option('--stream-id <hex>', 'use a specific 32-byte streamId instead of a random one')
+  .action(runMemoryInit);
 memory.command('show').description('Show profile + reputation').action(runMemoryShow);
 memory.command('history').description('Show rental history').action(runMemoryHistory);
+
+const compute = program.command('compute').description('0G Compute broker operations');
+compute
+  .command('setup')
+  .description('Fund broker ledger, list providers, acknowledge a TeeML provider')
+  .option('--fund <OG>', 'amount in OG to deposit (default 0.1)')
+  .option('--provider <address>', 'explicit provider to acknowledge')
+  .option('--skip-fund', 'skip ledger funding')
+  .option('--skip-ack', 'only list providers, do not acknowledge')
+  .action(runComputeSetup);
 
 program
   .parseAsync(process.argv)

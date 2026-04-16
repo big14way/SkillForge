@@ -62,17 +62,43 @@ Commander-based CLI exposing: `init`, `list`, `publish`, `rent`, `invoke`, `memo
 - [x] CLI commands scaffolded and typecheck clean.
 - [x] Git history uses conventional commits.
 
-## Blockers before "done"
+## Live infrastructure findings (2026-04-16)
 
-1. **v2 redeploy authorization.** Week 1 addresses (`0xC3a2…`, `0xde5e…`, `0x9C7a…`) are live and referenced in the README + HackQuest. Redeploy replaces all three — one-way action that invalidates any external references already made. Command to run (pending user approval):
-   ```bash
-   cd contracts
-   set -a && source .env && set +a
-   forge script script/Deploy.s.sol --rpc-url "$GALILEO_RPC_URL" --broadcast \
-     --private-key "$PRIVATE_KEY" --priority-gas-price 2000000000 --with-gas-price 3000000000
-   ```
-2. **0G KV stream id.** The testnet requires a stream to be provisioned once; `skillforge init` will be extended in a follow-up to provision + persist it.
-3. **TeeML provider address.** Fill `TEEML_PROVIDER_ADDRESS` in `.env` after running `listService()` against the broker on a funded wallet.
+While bringing the service layer up against live Galileo, we hit two real-world blockers that are worth recording for the HackQuest submission:
+
+### 0G Compute — no TeeML providers currently registered on Galileo
+
+- The `@0glabs/0g-serving-broker` defaults to these contracts on 0G:
+  - ledger: `0x907a552804CECC0cBAeCf734E2B9E45b2FA6a960`
+  - inference: `0x192ff84e5E3Ef3A6D29F508a56bF9beb344471f3`
+  - fine-tuning: `0x9472Cc442354a5a3bEeA5755Ec781937aB891c10`
+- `cast call 0x192ff8… "getAllServices()"` returns a zero-length array → **no inference providers are serving Galileo at the moment**.
+- We successfully funded a broker ledger with 0.1 OG via `broker.ledger.addLedger(0.1)` (tx `0x75040bf8fe2461a2543c796902cb90eee97e4ef32fe6c4f99537135f938e31b4`), which proves the ledger contract is live. The bottleneck is provider registration, not our code.
+- `skillforge compute setup` now lists providers and funds the ledger; `ComputeClient.infer` will work unchanged once a provider comes online.
+
+### 0G KV — read node is unreachable
+
+- Write path is verified working: `skillforge memory init` anchored streamId `0xd5346339…` via the Flow contract at `0x22E03a6A…` (tx `0x50a01338a40982274754d96399d5c4412f1667e0680b98aff7ff4a3feafb27e4`).
+- Read path is blocked: the KV read node that every 0G example references, `http://3.101.147.150:6789`, is not reachable from the public internet (15s TCP connect timeout as of 2026-04-16).
+- Integration test `memory.integration.test.ts` is gated behind `SKILLFORGE_KV_INTEGRATION=1` so it doesn't break the default suite. When the read endpoint returns, set the flag and `MemoryService` becomes fully verifiable end-to-end.
+
+### Published Galileo addresses (v2)
+
+| Contract | Address |
+| --- | --- |
+| SkillINFT | `0x8486E62b5975A4241818b564834A5f51ae2540B6` |
+| SkillRegistry | `0xe3D37E5c036CC0bb4E0A170D49cc9212ABc8f985` |
+| SkillEscrow | `0x6e6e076893c6b9eAc90463cd0E3021404F9B27B1` |
+| Flow (0G) | `0x22E03a6A89B950F1c82ec5e74F8eCa321a105296` |
+
+### Integration coverage running as of now
+
+| Test | Status |
+| --- | --- |
+| publish → upload → mint → register → download → decrypt | ✅ passing against live Galileo |
+| scorer attestation digest + on-chain whitelist | ✅ passing against live Galileo |
+| KV write + read roundtrip | ⏸ gated on the read endpoint |
+| TeeML inference | ⏸ gated on provider availability |
 
 ## Next up: Week 3
 
