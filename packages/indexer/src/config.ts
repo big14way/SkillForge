@@ -13,8 +13,12 @@ const Schema = z.object({
   skillINFT: z.string().regex(HEX_ADDR),
   skillRegistry: z.string().regex(HEX_ADDR),
   skillEscrow: z.string().regex(HEX_ADDR),
-  /** Block to start back-filling from. Defaults to 0 (full history). */
-  startBlock: z.coerce.bigint().default(0n),
+  /**
+   * Block to start back-filling from. Defaults to the v2 deploy neighborhood
+   * on Galileo (2026-04-16) — earlier blocks are pre-v2 and contain nothing
+   * for our addresses. Override with INDEXER_START_BLOCK=0 to scan all time.
+   */
+  startBlock: z.coerce.bigint().default(28_500_000n),
   /** Reorg safety buffer. 5 blocks is plenty for 0G Galileo. */
   confirmations: z.coerce.number().int().default(5),
   dbPath: z.string().default('./data/indexer.db'),

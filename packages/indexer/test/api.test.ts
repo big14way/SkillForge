@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import pino from 'pino';
-import type { FastifyInstance } from 'fastify';
 import { openDb } from '../src/db/client.js';
 import { Queries } from '../src/db/queries.js';
 import { buildApi } from '../src/api/server.js';
 
 describe('indexer API', () => {
   let q: Queries;
-  let app: FastifyInstance;
+  let app: Awaited<ReturnType<typeof buildApi>>;
 
   beforeEach(async () => {
     q = new Queries(openDb({ path: ':memory:' }));

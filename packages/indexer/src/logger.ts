@@ -1,11 +1,15 @@
 import pino from 'pino';
 
+/**
+ * Indexer logger. Defaults to plain JSON so we don't depend on `pino-pretty`
+ * being installed. Opt in to pretty output with `LOG_PRETTY=1`.
+ */
 export function createLogger(level = 'info'): pino.Logger {
+  const wantPretty = process.env.LOG_PRETTY === '1';
   return pino({
     level,
     base: { pkg: '@skillforge/indexer' },
-    // Pretty in dev; JSON in prod (controlled by NODE_ENV or env override).
-    ...(process.env.NODE_ENV !== 'production' && {
+    ...(wantPretty && {
       transport: {
         target: 'pino-pretty',
         options: { colorize: true, translateTime: 'HH:MM:ss' },

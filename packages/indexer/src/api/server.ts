@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import type { Logger } from 'pino';
 import type { Queries } from '../db/queries.js';
@@ -24,7 +24,7 @@ export interface ApiServerOptions {
  * Build a ready-to-listen Fastify app. Caller controls listen() so tests can
  * hit the app in-process via `app.inject`.
  */
-export async function buildApi(opts: ApiServerOptions): Promise<FastifyInstance> {
+export async function buildApi(opts: ApiServerOptions) {
   // Fastify v5 wants a config object (or false) under `logger`. We pass our
   // pino instance separately via `loggerInstance` to reuse the indexer's
   // configured transport.

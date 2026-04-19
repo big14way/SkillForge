@@ -42,12 +42,17 @@ async function main(): Promise<void> {
     new SkillINFTWatcher(watcherDeps, config.skillINFT as `0x${string}`),
   ];
 
-  await Promise.all(watchers.map((w) => w.start(config.startBlock)));
-  logger.info('all watchers caught up and listening');
-
+  // Start the API immediately so /api/health is reachable even while backfill
+  // is in progress. Watchers run concurrently in the background.
   const api = await buildApi({ db: q, chainId: config.chainId, logger });
   await api.listen({ host: config.apiHost, port: config.apiPort });
   logger.info({ host: config.apiHost, port: config.apiPort }, 'api listening');
+
+  // Kick off backfill + live subscribe. Each watcher persists its own cursor
+  // so a crash mid-reconcile resumes instead of restarting.
+  Promise.all(watchers.map((w) => w.start(config.startBlock)))
+    .then(() => logger.info('all watchers caught up and listening'))
+    .catch((err) => logger.error({ err }, 'watcher start failed'));
 
   const shutdown = async (sig: string) => {
     logger.info({ sig }, 'shutting down');
