@@ -40,4 +40,7 @@ export {
 } from './compute/attestation.js';
 export type { SignedAttestation } from './compute/attestation.js';
 
+export { withComputeFallback, withReadFallback } from './fallback.js';
+export type { FallbackMode, FallbackResult } from './fallback.js';
+
 export { logger } from './logger.js';
