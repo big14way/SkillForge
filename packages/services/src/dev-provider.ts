@@ -101,6 +101,10 @@ export class DevTeeMLProvider {
     // display the `mode: preview` tag on any result whose provider matches.
     // Lowercase so ethers doesn't enforce EIP-55 checksum — it's a sentinel,
     // not a real account. "defea7" is the recognizable trailing hint.
+    // Lowercase so ethers doesn't enforce EIP-55 checksum here. The Solidity
+    // constant in script/Deploy.s.sol uses the checksummed form
+    // 0x00000000000000000000000000000000defeA700 — both resolve to the same
+    // 20 bytes; keep them in sync when you change the sentinel.
     this.fakeProviderAddress =
       opts.fakeProviderAddress ?? ('0x00000000000000000000000000000000defea700' as Hex);
   }

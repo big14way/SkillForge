@@ -1,0 +1,92 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/agent/[address]",
+      "regex": "^/agent/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPaddress": "nxtPaddress"
+      },
+      "namedRegex": "^/agent/(?<nxtPaddress>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/rentals/[rentalId]",
+      "regex": "^/rentals/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPrentalId": "nxtPrentalId"
+      },
+      "namedRegex": "^/rentals/(?<nxtPrentalId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/skills/[tokenId]",
+      "regex": "^/skills/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPtokenId": "nxtPtokenId"
+      },
+      "namedRegex": "^/skills/(?<nxtPtokenId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/skills/[tokenId]/rent",
+      "regex": "^/skills/([^/]+?)/rent(?:/)?$",
+      "routeKeys": {
+        "nxtPtokenId": "nxtPtokenId"
+      },
+      "namedRegex": "^/skills/(?<nxtPtokenId>[^/]+?)/rent(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/publish",
+      "regex": "^/publish(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/publish(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}
