@@ -39,6 +39,31 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.19.17)
 
+  apps/demo-agent:
+    dependencies:
+      '@skillforge/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      chalk:
+        specifier: ^5.4.1
+        version: 5.6.2
+      ethers:
+        specifier: ^6.13.4
+        version: 6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.19.17
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.17)
+
   packages/cli:
     dependencies:
       '@skillforge/sdk':
@@ -8931,7 +8956,7 @@ snapshots:
 
   async-mutex@0.2.6:
     dependencies:
-      tslib: 2.7.0
+      tslib: 2.8.1
 
   asynckit@0.4.0: {}
 

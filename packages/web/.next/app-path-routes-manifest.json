@@ -1,9 +1,9 @@
 {
   "/_not-found/page": "/_not-found",
-  "/page": "/",
-  "/publish/page": "/publish",
-  "/skills/[tokenId]/rent/page": "/skills/[tokenId]/rent",
-  "/rentals/[rentalId]/page": "/rentals/[rentalId]",
   "/agent/[address]/page": "/agent/[address]",
-  "/skills/[tokenId]/page": "/skills/[tokenId]"
+  "/publish/page": "/publish",
+  "/page": "/",
+  "/skills/[tokenId]/page": "/skills/[tokenId]",
+  "/rentals/[rentalId]/page": "/rentals/[rentalId]",
+  "/skills/[tokenId]/rent/page": "/skills/[tokenId]/rent"
 }
