@@ -39,6 +39,14 @@ dist/
 # Indexer runtime state
 packages/indexer/data/
 
+# Python / UV
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
 # IDE
 .idea/
 .vscode/
