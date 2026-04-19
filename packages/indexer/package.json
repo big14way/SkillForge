@@ -1,0 +1,50 @@
+{
+  "name": "@skillforge/indexer",
+  "version": "0.3.0",
+  "description": "Event indexer for SkillForge — SQLite + Fastify",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/api/schemas.d.ts",
+      "import": "./dist/api/schemas.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src/db/schema.sql"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@skillforge/sdk": "workspace:*",
+    "better-sqlite3": "^11.10.0",
+    "fastify": "^5.2.1",
+    "pino": "^9.5.0",
+    "viem": "^2.21.55",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}
