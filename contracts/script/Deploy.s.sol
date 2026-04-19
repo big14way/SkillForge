@@ -26,12 +26,26 @@ contract Deploy is Script {
         address scorer;
     }
 
+    /// @dev 0G mainnet chainId. Deploy.s.sol refuses to whitelist a dev-mode
+    ///      scorer on this network.
+    uint256 internal constant MAINNET_CHAIN_ID = 16661;
+
+    /// @dev Lowercased sentinel matching services/src/dev-provider.ts.
+    address internal constant DEV_SCORER_SENTINEL = 0x00000000000000000000000000000000defeA700;
+
     function run() external returns (Deployment memory deployment) {
         uint256 deployerKey = vm.envOr("PRIVATE_KEY", uint256(0));
         address deployer = deployerKey == 0 ? msg.sender : vm.addr(deployerKey);
         address treasury = vm.envOr("PROTOCOL_TREASURY", deployer);
         address oracle = vm.envOr("ORACLE_ADDRESS", deployer);
         address scorer = vm.envOr("SCORER_ADDRESS", deployer);
+
+        // Guard: never ship the dev sentinel address as a live scorer, and
+        // never whitelist *any* dev-mode scorer on mainnet. The deployer
+        // address is a valid real scorer, so we only reject the sentinel.
+        if (block.chainid == MAINNET_CHAIN_ID && scorer == DEV_SCORER_SENTINEL) {
+            revert("Deploy: refusing to whitelist dev scorer on mainnet");
+        }
 
         if (deployerKey != 0) {
             vm.startBroadcast(deployerKey);

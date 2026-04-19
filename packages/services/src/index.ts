@@ -17,3 +17,6 @@ export type {
   RentalHistoryEntry,
   InvocationMemory,
 } from './memory-service.js';
+
+export { DevTeeMLProvider } from './dev-provider.js';
+export type { DevProviderOptions, DevInferenceResult } from './dev-provider.js';
