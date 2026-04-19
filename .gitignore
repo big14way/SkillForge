@@ -36,6 +36,9 @@ dist/
 # Test artifacts
 .vitest/
 
+# Indexer runtime state
+packages/indexer/data/
+
 # IDE
 .idea/
 .vscode/
