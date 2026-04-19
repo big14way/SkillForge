@@ -19,12 +19,16 @@
     "clean": "pnpm -r exec rm -rf dist .tsbuildinfo node_modules",
     "contracts:build": "cd contracts && forge build",
     "contracts:test": "cd contracts && forge test",
-    "abi:export": "node ./scripts/export-abis.mjs"
+    "abi:export": "node ./scripts/export-abis.mjs",
+    "dev": "concurrently -n indexer,web -c magenta,cyan \"pnpm -F @skillforge/indexer dev\" \"pnpm -F @skillforge/web dev\"",
+    "dev:indexer": "pnpm -F @skillforge/indexer dev",
+    "dev:web": "pnpm -F @skillforge/web dev"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
     "@typescript-eslint/eslint-plugin": "^8.20.0",
     "@typescript-eslint/parser": "^8.20.0",
+    "concurrently": "^9.1.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.4.2",
