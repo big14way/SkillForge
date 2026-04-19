@@ -38,7 +38,7 @@ interface ApiSkill {
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { cache: 'no-store' });
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`${url} → ${res.status}`);
   return (await res.json()) as T;
 }
@@ -87,16 +87,15 @@ async function main(): Promise<void> {
   const requestTx = await escrow.getFunction('requestRental')(chosen.tokenId);
   const requestReceipt = await requestTx.wait();
   type ParseLogArg = Parameters<typeof escrow.interface.parseLog>[0];
-  const requested = requestReceipt?.logs.find((log) => {
+  const logs: readonly ParseLogArg[] = (requestReceipt?.logs ?? []) as readonly ParseLogArg[];
+  const requested = logs.find((log) => {
     try {
-      return escrow.interface.parseLog(log as ParseLogArg)?.name === 'RentalRequested';
+      return escrow.interface.parseLog(log)?.name === 'RentalRequested';
     } catch {
       return false;
     }
   });
-  const rentalId = requested
-    ? escrow.interface.parseLog(requested as ParseLogArg)!.args.rentalId
-    : null;
+  const rentalId = requested ? escrow.interface.parseLog(requested)!.args.rentalId : null;
   if (!rentalId) throw new Error('RentalRequested not found');
   line(chalk.green, 'requested', `rental ${rentalId.toString()} tx ${requestReceipt!.hash}`);
 
