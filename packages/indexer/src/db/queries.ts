@@ -1,4 +1,4 @@
-import type { Database as Db } from 'better-sqlite3';
+import type { Database as Db, Statement } from 'better-sqlite3';
 
 /**
  * Typed query surface. Every write-path statement is prepared once per Db
@@ -59,24 +59,24 @@ export type SkillSort = 'quality' | 'recent' | 'popular';
 
 export class Queries {
   private readonly s: {
-    upsertSkill: import('better-sqlite3').Statement;
-    updateSkillScore: import('better-sqlite3').Statement;
-    incrementSkillRentals: import('better-sqlite3').Statement;
-    deactivateSkill: import('better-sqlite3').Statement;
-    upsertRental: import('better-sqlite3').Statement;
-    touchAgent: import('better-sqlite3').Statement;
-    bumpAgentCreated: import('better-sqlite3').Statement;
-    bumpAgentRented: import('better-sqlite3').Statement;
-    insertEvent: import('better-sqlite3').Statement;
-    setIndexerState: import('better-sqlite3').Statement;
-    getIndexerState: import('better-sqlite3').Statement;
-    getSkillById: import('better-sqlite3').Statement;
-    getRentalById: import('better-sqlite3').Statement;
-    getAgent: import('better-sqlite3').Statement;
-    listRentalsBySkill: import('better-sqlite3').Statement;
-    listRentalsByAgentAsRenter: import('better-sqlite3').Statement;
-    listRentalsByAgentAsCreator: import('better-sqlite3').Statement;
-    countSkills: import('better-sqlite3').Statement;
+    upsertSkill: Statement;
+    updateSkillScore: Statement;
+    incrementSkillRentals: Statement;
+    deactivateSkill: Statement;
+    upsertRental: Statement;
+    touchAgent: Statement;
+    bumpAgentCreated: Statement;
+    bumpAgentRented: Statement;
+    insertEvent: Statement;
+    setIndexerState: Statement;
+    getIndexerState: Statement;
+    getSkillById: Statement;
+    getRentalById: Statement;
+    getAgent: Statement;
+    listRentalsBySkill: Statement;
+    listRentalsByAgentAsRenter: Statement;
+    listRentalsByAgentAsCreator: Statement;
+    countSkills: Statement;
   };
 
   constructor(private readonly db: Db) {

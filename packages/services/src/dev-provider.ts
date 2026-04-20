@@ -1,4 +1,5 @@
-import { Wallet, getBytes, keccak256, toUtf8Bytes } from 'ethers';
+import type { Wallet} from 'ethers';
+import { getBytes, keccak256, toUtf8Bytes } from 'ethers';
 import {
   computeAttestationDigest,
   encodeAttestation,

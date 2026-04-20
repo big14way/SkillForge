@@ -2,12 +2,13 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import type { Logger } from 'pino';
 import type { Queries } from '../db/queries.js';
-import {
+import type {
   AgentView,
   HealthView,
-  ListSkillsQuery,
   RentalView,
-  SkillView,
+  SkillView} from './schemas.js';
+import {
+  ListSkillsQuery,
   agentRowToView,
   rentalRowToView,
   skillRowToView,

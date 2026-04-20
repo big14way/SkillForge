@@ -1,4 +1,5 @@
-import { Wallet, getBytes, keccak256, solidityPacked } from 'ethers';
+import type { Wallet} from 'ethers';
+import { getBytes, keccak256, solidityPacked } from 'ethers';
 import { sealKeyForRecipient, unsealKey, logger, type Hex } from '@skillforge/sdk';
 
 export interface HandleTransferParams {
