@@ -1,9 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/agent/[address]/page": "app/agent/[address]/page.js",
-  "/publish/page": "app/publish/page.js",
-  "/page": "app/page.js",
-  "/skills/[tokenId]/page": "app/skills/[tokenId]/page.js",
-  "/rentals/[rentalId]/page": "app/rentals/[rentalId]/page.js",
-  "/skills/[tokenId]/rent/page": "app/skills/[tokenId]/rent/page.js"
-}

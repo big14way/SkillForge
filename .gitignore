@@ -40,8 +40,10 @@ next-env.d.ts
 # Test artifacts
 .vitest/
 
-# Indexer runtime state
+# Indexer runtime state (location depends on process cwd)
 packages/indexer/data/
+packages/web/data/
+data/indexer.db*
 
 # Python / UV
 .venv/

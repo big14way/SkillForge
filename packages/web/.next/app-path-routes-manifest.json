@@ -1,9 +1,0 @@
-{
-  "/_not-found/page": "/_not-found",
-  "/agent/[address]/page": "/agent/[address]",
-  "/publish/page": "/publish",
-  "/page": "/",
-  "/skills/[tokenId]/page": "/skills/[tokenId]",
-  "/rentals/[rentalId]/page": "/rentals/[rentalId]",
-  "/skills/[tokenId]/rent/page": "/skills/[tokenId]/rent"
-}

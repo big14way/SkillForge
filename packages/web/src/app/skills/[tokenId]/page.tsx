@@ -17,8 +17,7 @@ export default function SkillDetailPage({
   const { data, isLoading, error } = useSkill(tokenId);
 
   if (isLoading) return <Skeleton />;
-  if (error) return <ErrorState error={error} />;
-  if (!data) return <div className="card">Not found</div>;
+  if (error || !data) return <ErrorState error={error} tokenId={tokenId} />;
 
   const { skill, recentRentals } = data;
 
@@ -161,12 +160,25 @@ function Skeleton() {
   );
 }
 
-function ErrorState({ error }: { error: unknown }) {
-  const msg = error instanceof Error ? error.message : String(error);
+function ErrorState({ error, tokenId }: { error: unknown; tokenId: string }) {
+  const msg = error instanceof Error ? error.message : error ? String(error) : '';
+  const looks404 = msg.includes('404') || msg.toLowerCase().includes('not found');
   return (
-    <div className="card border-red-500/30 bg-red-500/5 text-red-200">
-      <h2 className="font-medium">Couldn&apos;t load skill</h2>
-      <p className="mt-1 text-sm opacity-80">{msg}</p>
+    <div className="card space-y-3">
+      <h2 className="text-lg font-semibold text-white">
+        Skill <span className="mono text-zinc-400">#{tokenId}</span> not found
+      </h2>
+      <p className="text-sm text-zinc-400">
+        {looks404
+          ? 'The indexer has no record of this token id.'
+          : 'The indexer returned an error while loading this skill.'}
+      </p>
+      {msg && !looks404 && (
+        <pre className="overflow-x-auto rounded bg-bg text-xs text-red-300">{msg}</pre>
+      )}
+      <a href="/" className="btn-secondary w-fit">
+        Back to marketplace
+      </a>
     </div>
   );
 }

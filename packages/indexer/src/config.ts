@@ -14,11 +14,12 @@ const Schema = z.object({
   skillRegistry: z.string().regex(HEX_ADDR),
   skillEscrow: z.string().regex(HEX_ADDR),
   /**
-   * Block to start back-filling from. Defaults to the v2 deploy neighborhood
-   * on Galileo (2026-04-16) — earlier blocks are pre-v2 and contain nothing
-   * for our addresses. Override with INDEXER_START_BLOCK=0 to scan all time.
+   * Block to start back-filling from. Defaults to ~1k blocks before the v2
+   * deploy (block 28,026,845 on Galileo) so we don't miss SkillRegistered +
+   * SkillMinted events fired on or shortly after deploy. Override with
+   * INDEXER_START_BLOCK=0 to scan all time, or a newer block for speed.
    */
-  startBlock: z.coerce.bigint().default(28_500_000n),
+  startBlock: z.coerce.bigint().default(28_026_000n),
   /** Reorg safety buffer. 5 blocks is plenty for 0G Galileo. */
   confirmations: z.coerce.number().int().default(5),
   dbPath: z.string().default('./data/indexer.db'),

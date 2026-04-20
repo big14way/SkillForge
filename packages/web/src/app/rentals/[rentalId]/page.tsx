@@ -25,10 +25,32 @@ export default function RentalDetailPage({
   params: Promise<{ rentalId: string }>;
 }) {
   const { rentalId } = use(params);
-  const { data, isLoading } = useRental(rentalId);
+  const { data, isLoading, error } = useRental(rentalId);
 
   if (isLoading) return <div className="card animate-pulse h-32" />;
-  if (!data) return <div className="card">Not found</div>;
+  if (error || !data) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-3">
+        <h1 className="text-xl font-semibold text-white">
+          Rental <span className="mono text-zinc-400">#{rentalId}</span> not indexed yet
+        </h1>
+        <p className="text-sm text-zinc-400">
+          The indexer hasn&apos;t seen this rental id. Possible reasons:
+        </p>
+        <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-400">
+          <li>The rental was requested after the indexer&apos;s last sync block.</li>
+          <li>
+            The id is invalid — try{' '}
+            <a href="/" className="text-accent underline">
+              browsing skills
+            </a>{' '}
+            and open a rental from there.
+          </li>
+          <li>Your indexer is running against a different deployment than the one the rental was fired against.</li>
+        </ul>
+      </div>
+    );
+  }
   const r = data.rental;
   const currentIndex = STATES.indexOf(r.state as (typeof STATES)[number]);
 
