@@ -29,6 +29,12 @@ export interface SkillForgeConfig {
   compute?: {
     preferredProvider?: Hex;
     defaultLedgerBalance?: number;
+    /** Override the inference registry contract. Defaults to the canonical Galileo address. */
+    inferenceContract?: Hex;
+    /** Override the ledger contract. Defaults to the canonical Galileo address. */
+    ledgerContract?: Hex;
+    /** Override the fine-tuning contract. Defaults to the canonical Galileo address. */
+    fineTuningContract?: Hex;
   };
 }
 
@@ -92,6 +98,15 @@ export class SkillForgeClient {
       ...(config.compute?.defaultLedgerBalance !== undefined && {
         defaultLedgerBalance: config.compute.defaultLedgerBalance,
       }),
+      ...(config.compute?.inferenceContract !== undefined && {
+        inferenceContract: config.compute.inferenceContract,
+      }),
+      ...(config.compute?.ledgerContract !== undefined && {
+        ledgerContract: config.compute.ledgerContract,
+      }),
+      ...(config.compute?.fineTuningContract !== undefined && {
+        fineTuningContract: config.compute.fineTuningContract,
+      }),
     });
 
     this.contracts = {
@@ -142,10 +157,16 @@ export class SkillForgeClient {
 
     const preferredProvider = env.TEEML_PROVIDER_ADDRESS as Hex | undefined;
     const ledgerBalance = env.OG_COMPUTE_LEDGER_OG;
-    if (preferredProvider || ledgerBalance) {
+    const inferenceContract = env.OG_COMPUTE_INFERENCE_CONTRACT as Hex | undefined;
+    const ledgerContract = env.OG_COMPUTE_LEDGER_CONTRACT as Hex | undefined;
+    const fineTuningContract = env.OG_COMPUTE_FINETUNING_CONTRACT as Hex | undefined;
+    if (preferredProvider || ledgerBalance || inferenceContract || ledgerContract || fineTuningContract) {
       cfg.compute = {};
       if (preferredProvider) cfg.compute.preferredProvider = preferredProvider;
       if (ledgerBalance) cfg.compute.defaultLedgerBalance = Number(ledgerBalance);
+      if (inferenceContract) cfg.compute.inferenceContract = inferenceContract;
+      if (ledgerContract) cfg.compute.ledgerContract = ledgerContract;
+      if (fineTuningContract) cfg.compute.fineTuningContract = fineTuningContract;
     }
 
     logger.debug({ chainId: cfg.chain.chainId }, 'SkillForgeClient.fromEnv');

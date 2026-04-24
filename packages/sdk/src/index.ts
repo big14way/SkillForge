@@ -40,6 +40,8 @@ export {
 } from './compute/attestation.js';
 export type { SignedAttestation } from './compute/attestation.js';
 
+export { GALILEO_COMPUTE_CONTRACTS } from './compute/constants.js';
+
 export { withComputeFallback, withReadFallback } from './fallback.js';
 export type { FallbackMode, FallbackResult } from './fallback.js';
 

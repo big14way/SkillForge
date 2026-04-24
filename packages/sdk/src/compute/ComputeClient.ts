@@ -3,6 +3,7 @@ import { JsonRpcProvider, Wallet } from 'ethers';
 import { createZGComputeNetworkBroker, type ZGComputeNetworkBroker } from '@0glabs/0g-serving-broker';
 import { logger } from '../logger.js';
 import type { Hex } from '../types.js';
+import { GALILEO_COMPUTE_CONTRACTS } from './constants.js';
 
 /**
  * Wraps the 0G Compute broker to a shape the SkillForge service layer uses.
@@ -29,6 +30,17 @@ export interface ComputeClientConfig {
   defaultLedgerBalance?: number;
   /** Provider address to use. If unset, the first TeeML provider is picked on demand. */
   preferredProvider?: Hex;
+  /**
+   * Inference serving registry contract. Defaults to the canonical Galileo
+   * address (`GALILEO_COMPUTE_CONTRACTS.inference`). Override for mainnet or
+   * private deploys. The value is passed through to
+   * `createZGComputeNetworkBroker` as `inferenceCA`.
+   */
+  inferenceContract?: Hex;
+  /** Ledger (payment) contract; see `inferenceContract`. */
+  ledgerContract?: Hex;
+  /** Fine-tuning contract; unused today but passed through for completeness. */
+  fineTuningContract?: Hex;
 }
 
 export interface ProviderInfo {
@@ -69,6 +81,19 @@ export class InvalidAttestationError extends Error {
   override name = 'InvalidAttestationError';
 }
 
+/**
+ * Returns true for ethers' `CALL_EXCEPTION` with an empty `data` payload — the
+ * shape the Galileo inference contract emits when `getAllServices()` is called
+ * with zero registered services. Anything else (real revert reason, decode
+ * error, network failure) should still bubble.
+ */
+function isEmptyRevertError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { code?: string; data?: string; shortMessage?: string };
+  if (e.code !== 'CALL_EXCEPTION') return false;
+  return e.data === '0x' || e.data === '' || e.data == null;
+}
+
 export class ComputeClient {
   private readonly signer: Wallet;
   private readonly cfg: ComputeClientConfig;
@@ -84,10 +109,18 @@ export class ComputeClient {
   /** Lazy-init the broker — network calls happen here, not in the constructor. */
   async init(): Promise<ZGComputeNetworkBroker> {
     if (this.broker) return this.broker;
+    const ledgerCA = this.cfg.ledgerContract ?? GALILEO_COMPUTE_CONTRACTS.ledger;
+    const inferenceCA = this.cfg.inferenceContract ?? GALILEO_COMPUTE_CONTRACTS.inference;
+    const fineTuningCA = this.cfg.fineTuningContract ?? GALILEO_COMPUTE_CONTRACTS.fineTuning;
     // Dual ESM/CJS in the broker package makes Wallet types nominally
     // distinct from ours — safe cast.
-    this.broker = await createZGComputeNetworkBroker(this.signer as never);
-    logger.debug('ComputeClient broker initialized');
+    this.broker = await createZGComputeNetworkBroker(
+      this.signer as never,
+      ledgerCA,
+      inferenceCA,
+      fineTuningCA,
+    );
+    logger.debug({ ledgerCA, inferenceCA, fineTuningCA }, 'ComputeClient broker initialized');
     return this.broker;
   }
 
@@ -111,7 +144,23 @@ export class ComputeClient {
   /** Return the list of available inference providers, flagging TeeML ones. */
   async listProviders(): Promise<ProviderInfo[]> {
     const broker = await this.init();
-    const services = await broker.inference.listService();
+    // The live Galileo inference contract (0xa79F4c…) reverts with empty data
+    // on `getAllServices()` when zero providers are registered, instead of
+    // returning `[]`. Treat that specific shape as "empty list" so downstream
+    // consumers don't have to special-case.
+    let services: Awaited<ReturnType<typeof broker.inference.listService>>;
+    try {
+      services = await broker.inference.listService();
+    } catch (err) {
+      if (isEmptyRevertError(err)) {
+        logger.debug(
+          { addr: this.cfg.inferenceContract ?? GALILEO_COMPUTE_CONTRACTS.inference },
+          'inference.getAllServices reverted with empty data — treating as empty list',
+        );
+        return [];
+      }
+      throw err;
+    }
     return services.map((s) => ({
       provider: s.provider as Hex,
       model: s.model,
