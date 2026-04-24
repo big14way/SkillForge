@@ -62,19 +62,36 @@ Commander-based CLI exposing: `init`, `list`, `publish`, `rent`, `invoke`, `memo
 - [x] CLI commands scaffolded and typecheck clean.
 - [x] Git history uses conventional commits.
 
-## Live infrastructure findings (2026-04-16)
+## Live infrastructure findings (2026-04-16, updated April 2026)
 
 While bringing the service layer up against live Galileo, we hit two real-world blockers that are worth recording for the HackQuest submission:
 
-### 0G Compute — no TeeML providers currently registered on Galileo
+### 0G Compute — addresses corrected, providers still absent
 
-- The `@0glabs/0g-serving-broker` defaults to these contracts on 0G:
-  - ledger: `0x907a552804CECC0cBAeCf734E2B9E45b2FA6a960`
-  - inference: `0x192ff84e5E3Ef3A6D29F508a56bF9beb344471f3`
-  - fine-tuning: `0x9472Cc442354a5a3bEeA5755Ec781937aB891c10`
-- `cast call 0x192ff8… "getAllServices()"` returns a zero-length array → **no inference providers are serving Galileo at the moment**.
-- We successfully funded a broker ledger with 0.1 OG via `broker.ledger.addLedger(0.1)` (tx `0x75040bf8fe2461a2543c796902cb90eee97e4ef32fe6c4f99537135f938e31b4`), which proves the ledger contract is live. The bottleneck is provider registration, not our code.
-- `skillforge compute setup` now lists providers and funds the ledger; `ComputeClient.infer` will work unchanged once a provider comes online.
+**Original finding (2026-04-16)**: The `@0glabs/0g-serving-broker@0.4.4` defaults to these contracts:
+- ledger: `0x907a552804CECC0cBAeCf734E2B9E45b2FA6a960`
+- inference: `0x192ff84e5E3Ef3A6D29F508a56bF9beb344471f3`
+- fine-tuning: `0x9472Cc442354a5a3bEeA5755Ec781937aB891c10`
+
+The installed broker silently routed to these stale defaults and `listService()` returned 0 providers. We funded a ledger on the *default* ledger contract with 0.1 OG (tx `0x75040bf8fe2461a2543c796902cb90eee97e4ef32fe6c4f99537135f938e31b4`), which succeeded — proving the call path worked but pointing at a stale registry.
+
+**Post-Week-2 correction (April 2026, 0G core team)**: The 0G core team (Dragon/Wilbert) confirmed the canonical Galileo addresses in the APAC Dev Telegram:
+- ledger: `0xE70830508dAc0A97e6c087c75f402f9Be669E406`
+- inference: `0xa79F4c8311FF93C06b8CfB403690cc987c93F91E`
+- fine-tuning: `0xaC66eBd174435c04F1449BBa08157a707B6fa7b1`
+
+We now pass these through explicitly in `ComputeClient` (see [`packages/sdk/src/compute/constants.ts`](../packages/sdk/src/compute/constants.ts)) instead of relying on broker defaults. On-chain sanity checks pass:
+- `initialized() = true`
+- `owner() = 0x6D233D26…`
+- `ledgerAddress()` on the inference contract returns the ledger contract ✓
+
+`getAllServices()` still reverts with empty data — but the signal is now clear: **the contracts are the right ones; no TeeML providers have registered yet**. That's a 0G-side unblock, not ours. `ComputeClient.listProviders()` tolerates the empty revert and returns `[]`, so the dev-provider path keeps the marketplace functional in preview mode.
+
+### 0G KV — read node still unreachable
+
+- Write path is verified working: `skillforge memory init` anchored streamId `0xd5346339…` via the Flow contract at `0x22E03a6A…` (tx `0x50a01338a40982274754d96399d5c4412f1667e0680b98aff7ff4a3feafb27e4`).
+- Read path is blocked: the KV read node that every 0G example references, `http://3.101.147.150:6789`, is not reachable from the public internet (15s TCP connect timeout as of 2026-04-16).
+- Integration test `memory.integration.test.ts` is gated behind `SKILLFORGE_KV_INTEGRATION=1` so it doesn't break the default suite. 0G team confirmed KV requires connecting to a dedicated node and that "there is no public auto-discovery API" — waiting on a current endpoint.
 
 ### 0G KV — read node is unreachable
 

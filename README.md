@@ -95,7 +95,7 @@ Transparency: the following table is the source of truth about which surfaces ar
 | Indexer backfill + live event watch | ✅ Running locally | Smoke-tested against Galileo; paginated REST API on port 4000 |
 | Next.js marketplace UI | ✅ Builds + reads live indexer | No Vercel deploy yet; ship in Week 4 |
 | OpenClaw `discover` / `rent` / `rate` tools | ✅ Library + CLI pass tests | Distribution to clawhub registry deferred to Week 4 |
-| TeeML-verified live inference | ⏸ Preview mode | 0G Galileo currently has 0 registered TeeML providers; `DevTeeMLProvider` emits hand-crafted realistic samples with `mode: preview` |
+| TeeML-verified live inference | ⏸ Preview mode | SDK updated to canonical inference contract `0xa79F4c…` (confirmed by 0G core team, April 2026); `initialized()` + `ledgerAddress()` sanity-check pass, but the contract reverts on `getAllServices()` because no TeeML providers are currently registered. `DevTeeMLProvider` emits realistic samples tagged `mode: preview` in the meantime. |
 | 0G KV memory reads | ⏸ Preview mode | Writes succeed via the Flow contract; the read node `http://3.101.147.150:6789` is not reachable from the public internet |
 | Mainnet deployment | 🟡 Scheduled | Week 4 after 0G infrastructure blockers clear |
 
