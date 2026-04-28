@@ -287,4 +287,24 @@ export class Queries {
   countActiveSkills(): number {
     return (this.s.countSkills.get() as { count: number }).count;
   }
+
+  /**
+   * Returns the last `limit` quality scores for a skill, ordered most-recent
+   * first. Backs the reputation-trajectory sparkline. Source is the `rentals`
+   * table — every rental that reached Verified or Completed has a non-null
+   * score plus a completed_at (or, for Verified-but-not-Completed, the
+   * created_at of the rental as a coarse fallback).
+   */
+  getRecentScores(tokenId: string, limit = 10): Array<{ score: number; ts: number; rentalId: string }> {
+    const rows = this.db
+      .prepare(
+        `SELECT rental_id, quality_score, COALESCE(completed_at, created_at) AS ts
+         FROM rentals
+         WHERE skill_token_id = ? AND quality_score IS NOT NULL
+         ORDER BY ts DESC
+         LIMIT ?`,
+      )
+      .all(tokenId, limit) as Array<{ rental_id: string; quality_score: number; ts: number }>;
+    return rows.map((r) => ({ score: r.quality_score, ts: r.ts, rentalId: r.rental_id }));
+  }
 }

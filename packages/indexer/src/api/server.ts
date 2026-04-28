@@ -84,6 +84,19 @@ export async function buildApi(opts: ApiServerOptions) {
     },
   );
 
+  /**
+   * Reputation trajectory: last N quality scores for a skill (newest first).
+   * Used by the marketplace + skill detail sparkline.
+   */
+  app.get<{ Params: { tokenId: string }; Querystring: { limit?: string } }>(
+    '/api/skills/:tokenId/scores',
+    async (req) => {
+      const limit = Math.min(Number(req.query.limit ?? 10), 50);
+      const items = opts.db.getRecentScores(req.params.tokenId, limit);
+      return { items, page: { limit, count: items.length } };
+    },
+  );
+
   app.get<{ Params: { rentalId: string } }>('/api/rentals/:rentalId', async (req, reply) => {
     const row = opts.db.getRental(req.params.rentalId);
     if (!row) return reply.code(404).send({ error: 'rental not found' });
