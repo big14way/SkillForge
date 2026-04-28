@@ -1,0 +1,26 @@
+{
+  "marketplace": {
+    "name": "Twilio SMS (twilio-sms)",
+    "description": "Send SMS from an autonomous agent. Rate-limited on-chain so a runaway agent can't drain your Twilio credit. Phone numbers + auth never leave the TEE.",
+    "category": "automation",
+    "pricePerUseOG": "0.005"
+  },
+  "wrapper": {
+    "kind": "twilio-sms",
+    "endpoint": "https://api.twilio.com/2010-04-01/Accounts/{accountSid}/Messages.json",
+    "credentialEnvVars": {
+      "accountSid": "TWILIO_ACCOUNT_SID",
+      "authToken": "TWILIO_AUTH_TOKEN",
+      "fromNumber": "TWILIO_FROM_NUMBER"
+    },
+    "rateLimit": { "rpm": 6, "perDay": 100 },
+    "tags": ["sms", "communication", "twilio", "rate-limited"]
+  },
+  "demo": {
+    "input": {
+      "to": "+15555550100",
+      "body": "Your agent finished the daily run. Net P&L: +$184.20."
+    },
+    "expectedOutputShape": "{ sid: string, status: 'queued'|'sent'|'failed', dateCreated: string }"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "marketplace": {
+    "name": "CoinGecko Price (coingecko-price)",
+    "description": "Real-time price + 24h change for the top 1000 tokens by market cap. Pulled through CoinGecko's Pro API, signed by the TEE.",
+    "category": "trading",
+    "pricePerUseOG": "0.0001"
+  },
+  "wrapper": {
+    "kind": "coingecko-price",
+    "endpoint": "https://pro-api.coingecko.com/api/v3/simple/price",
+    "apiKeyEnvVar": "COINGECKO_API_KEY",
+    "rateLimit": { "rpm": 500, "tpm": 0 },
+    "tags": ["crypto", "price", "trading"]
+  },
+  "demo": {
+    "input": { "symbol": "SOL", "vs_currency": "usd" },
+    "expectedOutputShape": "{ price: number, change24hPct: number, marketCapUsd: number }"
+  }
+}

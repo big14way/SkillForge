@@ -1,0 +1,19 @@
+{
+  "marketplace": {
+    "name": "Firecrawl Scrape (firecrawl-scrape)",
+    "description": "Scrape any URL into clean agent-readable markdown plus structured metadata. Handles SPAs, dynamic content, and the usual scraping headaches.",
+    "category": "data",
+    "pricePerUseOG": "0.001"
+  },
+  "wrapper": {
+    "kind": "firecrawl-scrape",
+    "endpoint": "https://api.firecrawl.dev/v1/scrape",
+    "apiKeyEnvVar": "FIRECRAWL_API_KEY",
+    "rateLimit": { "rpm": 30, "tpm": 0 },
+    "tags": ["scraping", "web", "markdown", "rag"]
+  },
+  "demo": {
+    "input": { "url": "https://docs.0g.ai/", "formats": ["markdown"] },
+    "expectedOutputShape": "{ markdown: string, metadata: { title, description, ogImage } }"
+  }
+}

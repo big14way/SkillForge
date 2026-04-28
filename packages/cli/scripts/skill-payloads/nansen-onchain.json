@@ -1,0 +1,19 @@
+{
+  "marketplace": {
+    "name": "Nansen Onchain (nansen-onchain)",
+    "description": "Wallet labels, smart-money flow tags, and recent-activity summaries from Nansen. Sealed key, signed output — research agents can trust the data.",
+    "category": "trading",
+    "pricePerUseOG": "0.002"
+  },
+  "wrapper": {
+    "kind": "nansen-onchain",
+    "endpoint": "https://api.nansen.ai/api/beta/profiler",
+    "apiKeyEnvVar": "NANSEN_API_KEY",
+    "rateLimit": { "rpm": 30, "tpm": 0 },
+    "tags": ["onchain", "analytics", "smart-money", "trading", "research"]
+  },
+  "demo": {
+    "input": { "wallet": "0xab5801a7d398351b8be11c439e05c5b3259aec9b" },
+    "expectedOutputShape": "{ labels: string[], smartMoneyTags: string[], recentTxSummary: string }"
+  }
+}

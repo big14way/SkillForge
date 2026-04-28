@@ -1,0 +1,20 @@
+{
+  "marketplace": {
+    "name": "WeatherAPI Forecast (weatherapi-forecast)",
+    "description": "7-day forecast for any location — useful for IoT, agriculture, and logistics agents. WeatherAPI's 1M free calls/month make this the cheapest skill on the marketplace.",
+    "category": "data",
+    "pricePerUseOG": "0.0001"
+  },
+  "wrapper": {
+    "kind": "weatherapi-forecast",
+    "endpoint": "https://api.weatherapi.com/v1/forecast.json",
+    "apiKeyEnvVar": "WEATHERAPI_API_KEY",
+    "defaultDays": 7,
+    "rateLimit": { "rpm": 100, "tpm": 0 },
+    "tags": ["weather", "iot", "agriculture", "logistics"]
+  },
+  "demo": {
+    "input": { "location": "Lagos, Nigeria", "days": 7 },
+    "expectedOutputShape": "{ location: { name, country }, forecastday: [{ date, day: { maxtemp_c, condition }, hour: [...] }] }"
+  }
+}

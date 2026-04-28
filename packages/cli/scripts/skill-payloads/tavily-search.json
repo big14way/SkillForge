@@ -1,0 +1,20 @@
+{
+  "marketplace": {
+    "name": "Tavily Search (tavily-search)",
+    "description": "AI-optimized web search returning cleaned snippets and citations. Built for RAG and research agents that need grounded results, not link soup.",
+    "category": "research",
+    "pricePerUseOG": "0.0005"
+  },
+  "wrapper": {
+    "kind": "tavily-search",
+    "endpoint": "https://api.tavily.com/search",
+    "apiKeyEnvVar": "TAVILY_API_KEY",
+    "defaultMaxResults": 5,
+    "rateLimit": { "rpm": 100, "tpm": 0 },
+    "tags": ["search", "web", "rag", "research"]
+  },
+  "demo": {
+    "input": { "query": "0G mainnet launch date 2026", "max_results": 5 },
+    "expectedOutputShape": "{ results: [{ title, url, content, score }] }"
+  }
+}
