@@ -1,21 +1,69 @@
 # SkillForge
 
-**A verifiable agent-skill marketplace on 0G.** AI agents tokenize their capabilities as ERC-7857 INFTs with encrypted payloads on 0G Storage, prove quality with 0G Compute TeeML, rent them to each other through an 8-state escrow on 0G Chain, and carry reputation across sessions via 0G Storage KV.
+**The Agent-Ready API Wrapper Layer for OpenClaw.**
+
+Every developer building autonomous AI agents hits the same wall: their agent needs to call paid APIs (OpenAI, Anthropic, Stripe, market data, scrapers), but doing this from an agent that runs without you watching it is a security disaster. Raw API keys leak. Rate limits don't propagate to autonomous behavior. There's no way to prove the API response reaching the agent wasn't tampered with mid-flight.
+
+SkillForge fixes this. Tokenized API wrappers as encrypted ERC-7857 INFTs on 0G, with the API key locked inside a TEE-protected sealed inference. Agents rent a skill once, invoke it many times, and every response ships with a TEE attestation they can verify before acting on the output. No more raw keys in agents. No more "trust me bro" API responses.
 
 Built for the **0G APAC Hackathon — Track 1 (Agentic Infrastructure & OpenClaw Lab)**. Submission deadline: **2026-05-16**.
 
 ---
 
-## Why it matters
+## Why agent developers use SkillForge
 
-Today, AI agents are islands. If one agent writes a great trading strategy or a precise market-news summarizer, no other agent can discover, pay for, and safely use it. SkillForge fixes that at the protocol layer:
+| Without SkillForge | With SkillForge |
+| --- | --- |
+| Raw API key in agent code (leakable, single-tenant) | API key sealed inside TEE; agent only holds rental credentials |
+| Rate limits enforced client-side (bypassable, leaky) | Rate limits enforced on-chain via rental escrow |
+| API output is "trust me bro" (no proof of authenticity) | Every output ships with TEE attestation hash |
+| Agent compromise = full API quota drained | Agent compromise = zero API exposure (key never on agent) |
+| No way to prove what model/data drove a decision | Every invocation has on-chain provenance |
 
-- **Tokenize skills** — every skill is an ERC-7857 INFT with an encrypted payload on 0G Storage.
-- **Prove quality** — before a rental completes, a scorer-signed attestation is verified on-chain against a whitelisted provider set; the production path runs inside a 0G Compute TeeML.
-- **Settle on-chain** — an 8-state escrow mediates the rental, with 95% to creator / 5% to protocol.
-- **Plug in** — the marketplace ships as an OpenClaw meta-skill: `clawhub install skillforge`.
+## Launch lineup — 8 wrapped APIs
 
-SkillForge is the one entry that combines all four 0G primitives (Chain + Storage + Compute + ERC-7857) in a single product, wired to a frontend, an indexer, and an OpenClaw distribution.
+| # | Skill ID | Wraps | Price/use |
+| --- | --- | --- | --- |
+| 1 | [`oai-chat`](packages/cli/scripts/skill-payloads/oai-chat.json) | OpenAI Chat Completions (GPT-4o / o1) | 0.001 OG |
+| 2 | [`anthropic-chat`](packages/cli/scripts/skill-payloads/anthropic-chat.json) | Anthropic Messages (Claude 3.5 / Opus) | 0.001 OG |
+| 3 | [`coingecko-price`](packages/cli/scripts/skill-payloads/coingecko-price.json) | CoinGecko Pro — top 1000 token prices | 0.0001 OG |
+| 4 | [`tavily-search`](packages/cli/scripts/skill-payloads/tavily-search.json) | Tavily — AI-optimized web search | 0.0005 OG |
+| 5 | [`firecrawl-scrape`](packages/cli/scripts/skill-payloads/firecrawl-scrape.json) | Firecrawl — URL → markdown for agents | 0.001 OG |
+| 6 | [`twilio-sms`](packages/cli/scripts/skill-payloads/twilio-sms.json) | Twilio SMS (rate-limited on-chain) | 0.005 OG |
+| 7 | [`nansen-onchain`](packages/cli/scripts/skill-payloads/nansen-onchain.json) | Nansen — wallet labels + smart-money flow | 0.002 OG |
+| 8 | [`weatherapi-forecast`](packages/cli/scripts/skill-payloads/weatherapi-forecast.json) | WeatherAPI — 7-day forecast | 0.0001 OG |
+
+`clawhub install skillforge` and any OpenClaw agent has these 8 capabilities instantly.
+
+## How it works
+
+```
+                 ┌──────────────────────────────────────────────┐
+                 │                                              │
+   Agent ── 1 ─→ Rent on-chain ── 2 ─→ Invoke inside TEE ── 3 ──┘
+     ↑                                       │
+     │                                       4
+     │                                       ↓
+     └── 5 ── Quality score updates ←── TEE-attested output
+              skill reputation                 (signed)
+```
+
+1. Agent invokes `skillforge.invoke('oai-chat', { prompt: '...' })`
+2. SkillForge SDK creates a rental on 0G Chain (or reuses an active one), sends the invocation to the skill's TEE-protected inference
+3. Skill decrypts the API key inside the TEE, calls the upstream API, signs the response, returns `{ output, attestation }` to the agent
+4. The agent verifies the signature before acting on the output
+5. Quality rating goes through a TEE-attested scorer and updates the skill's on-chain reputation; bad skills surface, good skills compound
+
+The agent's wallet never holds the API key. The skill creator never sees the agent's invocation. The API provider never sees the agent's wallet.
+
+## What's verifiable on-chain
+
+- Skill identity (ERC-7857 INFT with content hash on-chain)
+- Skill creator (immutable)
+- Quality scoring (ECDSA-signed attestation; recovered + whitelisted on-chain by [`AttestationVerifier`](contracts/src/libraries/AttestationVerifier.sol))
+- **Reputation trajectory** (sparkline of last N rentals — direction, not just current number)
+- Rental lifecycle (8-state machine: Requested → Funded → Active → Submitted → Verified → Completed)
+- Payment flow (95% creator / 5% protocol)
 
 ---
 
@@ -233,16 +281,20 @@ SkillForge is being built in the open across the 0G APAC Hackathon's two-month w
 - Key commits: [`01701bb`](https://github.com/big14way/SkillForge/commit/01701bb) "feat(indexer): contract event watchers"; [`3b3519a`](https://github.com/big14way/SkillForge/commit/3b3519a) "feat(web): next.js 15 marketplace"; [`938534c`](https://github.com/big14way/SkillForge/commit/938534c) "feat(openclaw): python meta-skill"
 - Detail: [`docs/WEEK3_DELIVERABLES.md`](docs/WEEK3_DELIVERABLES.md)
 
-### Week 4 — Live Compute + Mainnet (targeted 2026-05-16)
-- Wire live 0G Compute TeeML inference into `QualityScorer` and skill invocation (replace `DevTeeMLProvider`)
-- Wire live 0G Storage KV reads into `MemoryService`
-- Deploy to 0G Aristotle Mainnet (chainId 16661)
-- 3-minute demo video, Vercel + Railway deploys, HackQuest submission
+### Week 4 — Pivot + Mainnet (2026-04-21 → 2026-05-14, in progress)
+- **Pivot to Agent-Ready API Wrapper Layer** based on direct product feedback from Dragon (0G core team) on 2026-04-21. Architecture preserved; positioning sharpened around the API key custody problem every agent developer faces. Detail: [`docs/PIVOT_NOTES.md`](docs/PIVOT_NOTES.md).
+- 8 launch skills wrapping OpenAI / Anthropic / CoinGecko / Tavily / Firecrawl / Twilio / Nansen / WeatherAPI ([`packages/cli/scripts/skill-payloads/`](packages/cli/scripts/skill-payloads/))
+- Three new UI badges: **TEE-Verified Output**, **End-to-End Encrypted Invocation**, **Reputation Trajectory** sparkline ([`packages/web/src/components/badges/`](packages/web/src/components/badges/))
+- Indexer endpoint for the trajectory: `GET /api/skills/:tokenId/scores`
+- Wire live 0G Compute TeeML inference into `QualityScorer` (replace `DevTeeMLProvider`) — gated on TeeML provider availability on Galileo
+- Deploy to 0G Aristotle Mainnet (chainId 16661); seed mainnet with the 8 launch skills
+- 3-minute demo video v2, Vercel + Railway deploys, HackQuest submission
 
 ### Lessons from iteration
+- **Positioning matters as much as engineering.** Weeks 1-3 built a verifiable, encrypted, distributable agent infrastructure layer with 75 contract tests, 5 packages, and a clean indexer + frontend. A direct call with the 0G team on 2026-04-21 surfaced that "agent skill marketplace" was too generic; the same architecture serves a much sharper user — every agent dev with a `process.env.OPENAI_API_KEY` problem. The pivot kept everything shipped and replaced the framing.
 - **Real attestation verification is nontrivial.** The Week 1 stub shipped fast; Week 2 replaced it with on-chain ECDSA recovery + a whitelist + score-binding so a replay can't reuse an old signature under a new score. Both versions forced a clearer trust model.
-- **Events must be designed for indexing.** Mid-Week 3, the indexer's `AccessAuthorized` handler exposed that our rental-state transitions needed the creator address to already be stored — so the SkillEscrow watcher reads from the indexer's own `skills` table rather than re-parsing. Fixing that pattern before shipping the API saved a re-index on every deploy.
-- **Soft-fail beats hard-fail.** Two 0G infra components (KV read node, TeeML providers) were unreachable during Week 2 and are still unreachable as of Week 3. Wrapping every call in `withComputeFallback()` means the frontend, OpenClaw skill, and demo agent all stay buildable — judges see an honest preview-mode banner instead of a broken app.
+- **Events must be designed for indexing.** The `SkillRegistered` event omitted `name`+`description`, leaving the marketplace UI showing `skill-N` placeholders. Fixed indexer-side via a fire-and-forget `Registry.getSkill()` enrichment + a one-shot backfill script — no contract redeploy.
+- **Soft-fail beats hard-fail.** Two 0G infra components (KV read node, TeeML providers) were unreachable during Week 2 and are still unreachable as of Week 4. Wrapping every call in `withComputeFallback()` means the frontend, OpenClaw skill, and demo agent all stay buildable — judges see an honest preview-mode banner instead of a broken app.
 - **Specific sentinels > vague placeholders.** The dev scorer address is `0x…defeA700` (valid checksum) and appears in both the TypeScript and Solidity codepaths. A single grep finds every place preview mode leaks into production paths.
 
 ---
@@ -251,20 +303,21 @@ SkillForge is being built in the open across the 0G APAC Hackathon's two-month w
 
 SkillForge is designed to outlive the hackathon. The deadline is 2026-05-16; the roadmap below is what happens between then and end of 2026.
 
-### Phase 1 — Public Mainnet Launch (targeted June 2026)
+### Phase 1 — Mainnet Launch with 20+ API wrappers (targeted June 2026)
 - Deploy v2 contracts to 0G Aristotle Mainnet with full event indexing
+- Grow the launch lineup from 8 → 20+ wrapped APIs (Stripe, Slack, GitHub, Discord, S3, OpenSea, Etherscan, Alchemy, additional LLM providers)
 - Ship `skillforge-claw` to PyPI and to ClawHub for one-command installation across OpenClaw-compatible agent hosts (Claude Code, Cursor, GitHub Copilot, Continue, Zed)
 - Soft-launch to ~100 agent developers via the 0G APAC Dev community, ETHGlobal Discord, and OpenClaw forum
 - Pricing: fully gasless for publishers; 5% protocol fee on completed rentals (already implemented in `SkillEscrow`)
 
 ### Phase 2 — Developer-First Distribution (targeted July–August 2026)
-- **Skill templates**: 20 curated, MIT-licensed templates for common agent tasks (sentiment analysis, DEX routing, on-chain due diligence, code review, content moderation) — free, team-seeded to bootstrap the marketplace
+- **Third-party API key onboarding flow**: each skill creator brings their own key (currently the 8 launch wrappers run on Gwill's keys for the hackathon)
 - **SDK expansions**: Rust SDK mirroring the TypeScript one, targeting agent runtimes in the 0G Rust ecosystem
 - **Embedded marketplace component**: `@skillforge/react` package so any dApp can embed a "Hire a skill" widget in ~10 lines of code
 - **Public indexer + subgraph**: graduate from SQLite to a hosted Postgres + Subgraph deployment, publicly queryable
 
-### Phase 3 — Reputation & Governance (targeted September–October 2026)
-- **Portable reputation**: ERC-7857 metadata extensions that let skill creators carry their quality scores across platforms — reputation becomes a transferable asset, not a siloed number
+### Phase 3 — Cross-skill Reputation & Governance (targeted September–October 2026)
+- **Cross-skill reputation that travels with API wrapper providers**: a developer who publishes a great `oai-chat` wrapper carries that signal when they publish `tavily-search` — reputation becomes a transferable asset across skills, not a siloed number per skill
 - **Staking for providers**: TeeML inference providers stake $0G to join the scoring quorum; slashing on proven tampering
 - **Dispute resolution**: transition from owner-arbitration to a multi-agent AI judge committee, with appeal to a small human panel for edge cases
 - **Creator royalties**: extend the existing ERC-2981 5% royalty to support split-royalty on forked/derived skills
