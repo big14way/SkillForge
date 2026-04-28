@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useSkill } from '@/lib/hooks';
 import { ExplorerLink } from '@/components/shared/ExplorerLink';
 import { QualityScoreBadge } from '@/components/skill/QualityScoreBadge';
+import { TEEVerifiedBadge } from '@/components/badges/TEEVerifiedBadge';
+import { EncryptedInvocationBadge } from '@/components/badges/EncryptedInvocationBadge';
+import { ReputationTrajectory } from '@/components/badges/ReputationTrajectory';
 import { formatOG, relativeTime, shortAddress } from '@/lib/utils';
 import { env } from '@/lib/env';
 
@@ -36,12 +39,18 @@ export default function SkillDetailPage({
             )}
           </div>
           <div className="text-right">
-            <QualityScoreBadge score={skill.qualityScore} />
+            <ReputationTrajectory tokenId={skill.tokenId} limit={10} />
             <div className="mt-2 text-2xl font-semibold text-white">
               {formatOG(skill.pricePerUse)}
             </div>
             <div className="text-xs text-zinc-500">per invocation</div>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-bg-border pt-3">
+          <TEEVerifiedBadge attestation={{ live: false }} />
+          <EncryptedInvocationBadge />
+          {skill.qualityScore > 0 && <QualityScoreBadge score={skill.qualityScore} />}
         </div>
 
         <div className="flex flex-wrap items-center gap-4 border-t border-bg-border pt-4 text-sm">

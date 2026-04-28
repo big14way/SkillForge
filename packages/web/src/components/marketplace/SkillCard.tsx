@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ApiSkill } from '@/lib/api-client';
 import { formatOG, relativeTime, shortAddress } from '@/lib/utils';
-import { QualityScoreBadge } from '@/components/skill/QualityScoreBadge';
+import { ReputationTrajectory } from '@/components/badges/ReputationTrajectory';
 
 export function SkillCard({ skill }: { skill: ApiSkill }) {
   return (
@@ -12,7 +12,7 @@ export function SkillCard({ skill }: { skill: ApiSkill }) {
       <div>
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold text-white line-clamp-2">{skill.name}</h3>
-          <QualityScoreBadge score={skill.qualityScore} />
+          <ReputationTrajectory tokenId={skill.tokenId} limit={10} size="sm" />
         </div>
         {skill.description && (
           <p className="mt-2 text-sm text-zinc-400 line-clamp-2">{skill.description}</p>

@@ -8,6 +8,8 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { CATEGORIES } from '@/components/marketplace/CategoryFilter';
 import { TxStatus, type TxStep } from '@/components/shared/TxStatus';
 import { PreviewBanner } from '@/components/shared/PreviewBanner';
+import { TEEVerifiedBadge } from '@/components/badges/TEEVerifiedBadge';
+import { EncryptedInvocationBadge } from '@/components/badges/EncryptedInvocationBadge';
 import { env } from '@/lib/env';
 
 /**
@@ -225,6 +227,10 @@ function PreviewStep({ draft }: { draft: Draft }) {
   return (
     <div className="space-y-3 text-sm">
       <h3 className="text-white font-medium">Ready to publish</h3>
+      <div className="flex flex-wrap gap-2">
+        <TEEVerifiedBadge attestation={{ live: false }} />
+        <EncryptedInvocationBadge />
+      </div>
       <dl className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Row label="Name" value={draft.name} />
         <Row label="Category" value={draft.category} />
